@@ -6,7 +6,7 @@
     <title>ÖZKAN IPTV PLAYER</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js"></script>
     <style>
-        /* (Stiller aynı, kısaltmak için tekrar yazmadım, yukarıdakiyle aynı) */
+        /* (Stiller aynı, kısaltmak için tekrar yazmadım) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #ffffff; color: #24292f; line-height: 1.5; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 35, 40, 0.7); z-index: 1000; align-items: center; justify-content: center; }
@@ -284,9 +284,8 @@
 
     <script>
         // ============================================================
-        //  KESİN ÇÖZÜM - ES5 UYUMLU - LG webOS 2.2.3 / Chrome 34
-        //  Tüm ES6 özellikleri temizlendi, forEach yerine for döngüleri
-        //  NodeList'ler diziye çevrildi, Object.keys kullanılmadı.
+        //  KESİN ÇÖZÜM - SADECE ES5 - LG webOS 2.2.3 / Chrome 34
+        //  let, const, arrow, forEach, Object.keys, template literals YOK
         // ============================================================
 
         var app = {};
@@ -349,7 +348,7 @@
             }, errback);
         }
 
-        // ----- Veri çıkarıcı (güvenli, ES5, Object.keys kullanılmaz) -----
+        // ----- Veri çıkarıcı (güvenli, ES5, Object.keys KULLANMAZ) -----
         function extractChannels(data) {
             try {
                 if (!data) return [];
@@ -447,6 +446,14 @@
                 this.bindEvents();
                 this.renderPanelList();
                 this.bindRemoteKeys();
+                // HLS.js kontrolü
+                if (typeof Hls === 'undefined') {
+                    this.notify('⚠️ HLS.js yüklenemedi. Canlı yayınlar çalışmaz.', 'error');
+                } else if (!Hls.isSupported()) {
+                    this.notify('⚠️ Tarayıcı HLS desteklemiyor.', 'error');
+                } else {
+                    this.notify('✅ HLS.js hazır.', 'info');
+                }
             } catch (e) {
                 console.error('init hatası:', e);
                 this.notify('Başlatma hatası: ' + e.message, 'error');
@@ -548,11 +555,14 @@
                 self.changeCategory(e.target.value);
             });
 
-            document.querySelectorAll('.tab').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    self.switchType(btn.dataset.type);
-                });
-            });
+            var tabs = document.querySelectorAll('.tab');
+            for (var i = 0; i < tabs.length; i++) {
+                (function(btn) {
+                    btn.addEventListener('click', function() {
+                        self.switchType(btn.dataset.type);
+                    });
+                })(tabs[i]);
+            }
 
             document.getElementById('channelsList').addEventListener('scroll', function() {
                 self.handleScroll();
@@ -622,7 +632,6 @@
                 }
                 container.innerHTML = html;
 
-                // NodeList'i diziye çevirip olay ekle
                 var items = container.querySelectorAll('.panel-item');
                 for (var j = 0; j < items.length; j++) {
                     (function(el) {
@@ -1106,7 +1115,7 @@
 
                 container.innerHTML = html;
 
-                // Olay ekle - NodeList'i diziye çevir
+                // Olay ekle - NodeList'i diziye çevirmeden doğrudan indeksle
                 var items = container.querySelectorAll('.channel-item');
                 for (var j = 0; j < items.length; j++) {
                     (function(item) {
@@ -1276,7 +1285,6 @@
                 var password = this.state.creds.password;
                 var type = this.state.type;
                 var url = '';
-                // stream_id veya id kontrolü
                 var streamId = ch.stream_id || ch.id || ch.num || '';
                 if (!streamId) {
                     this.notify('❌ Geçersiz kanal ID', 'error');
@@ -1326,7 +1334,7 @@
                 setTimeout(function() {
                     try {
                         if (url.indexOf('.m3u8') !== -1) {
-                            if (Hls && Hls.isSupported()) {
+                            if (typeof Hls !== 'undefined' && Hls.isSupported()) {
                                 self.state.hls = new Hls({ enableWorker: true, lowLatencyMode: true });
                                 self.state.hls.loadSource(url);
                                 self.state.hls.attachMedia(player);
@@ -1334,10 +1342,10 @@
                                     player.play()['catch'](function() { self.notify('❌ Oynatma başarısız', 'error'); });
                                 });
                                 self.state.hls.on(Hls.Events.ERROR, function(e, data) {
-                                    if (data.fatal) self.notify('❌ Akış hatası oluştu', 'error');
+                                    if (data.fatal) self.notify('❌ Akış hatası oluştu: ' + (data.details || ''), 'error');
                                 });
                             } else {
-                                self.notify('❌ HLS desteklenmiyor', 'error');
+                                self.notify('❌ HLS desteklenmiyor veya HLS.js yüklenmemiş.', 'error');
                             }
                         } else {
                             player.src = url;
