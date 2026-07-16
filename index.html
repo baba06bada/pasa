@@ -6,7 +6,7 @@
     <title>ÖZKAN IPTV PLAYER</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js"></script>
     <style>
-        /* (Stiller aynı, kısaltmak için tekrar yazmadım) */
+        /* (Stiller aynı, kısaltmak için tekrar yazmadım, yukarıdakiyle aynı) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #ffffff; color: #24292f; line-height: 1.5; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 35, 40, 0.7); z-index: 1000; align-items: center; justify-content: center; }
@@ -284,7 +284,9 @@
 
     <script>
         // ============================================================
-        //  KESİN VE SON ÇÖZÜM - ES5 UYUMLU - LG webOS 2.2.3 / Chrome 34
+        //  KESİN ÇÖZÜM - ES5 UYUMLU - LG webOS 2.2.3 / Chrome 34
+        //  Tüm ES6 özellikleri temizlendi, forEach yerine for döngüleri
+        //  NodeList'ler diziye çevrildi, Object.keys kullanılmadı.
         // ============================================================
 
         var app = {};
@@ -347,7 +349,7 @@
             }, errback);
         }
 
-        // ----- Veri çıkarıcı (güvenli, ES5, Object.values YOK) -----
+        // ----- Veri çıkarıcı (güvenli, ES5, Object.keys kullanılmaz) -----
         function extractChannels(data) {
             try {
                 if (!data) return [];
@@ -620,11 +622,15 @@
                 }
                 container.innerHTML = html;
 
-                container.querySelectorAll('.panel-item').forEach(function(el) {
-                    el.addEventListener('click', function() {
-                        self.selectPanel(el.dataset.id);
-                    });
-                });
+                // NodeList'i diziye çevirip olay ekle
+                var items = container.querySelectorAll('.panel-item');
+                for (var j = 0; j < items.length; j++) {
+                    (function(el) {
+                        el.addEventListener('click', function() {
+                            self.selectPanel(el.dataset.id);
+                        });
+                    })(items[j]);
+                }
             } catch (e) {
                 console.error('renderPanelList hatası:', e);
             }
@@ -647,6 +653,7 @@
                     document.getElementById('panelPassword').value = panel.password;
                     document.getElementById('savePanelBtn').textContent = 'Güncelle';
                     document.getElementById('deletePanelBtn').disabled = false;
+                    this.notify('✅ Panel seçildi: ' + (panel.name || panel.serverUrl), 'success');
                 } else {
                     this.newPanel();
                     this.notify('⚠️ Panel bulunamadı, yeni panel oluşturabilirsiniz.', 'warning');
@@ -654,6 +661,7 @@
                 this.renderPanelList();
             } catch (e) {
                 console.error('selectPanel hatası:', e);
+                this.notify('Panel seçme hatası: ' + e.message, 'error');
             }
         };
 
@@ -959,6 +967,7 @@
                         self.state.categories = cats;
                         self.state.catCache[key] = self.state.categories;
                         self.renderCategories();
+                        self.notify('✅ ' + cats.length + ' kategori yüklendi', 'success');
                     } catch (e) {
                         console.error('Kategori işleme hatası:', e);
                         self.state.categories = [];
@@ -1097,38 +1106,48 @@
 
                 container.innerHTML = html;
 
-                container.querySelectorAll('.channel-item').forEach(function(item) {
-                    item.addEventListener('click', function() {
-                        try {
-                            var ch = JSON.parse(item.dataset.channel);
-                            if (self.state.type === 'series') {
-                                self.showEpisodes(ch);
-                            } else {
-                                self.play(ch);
+                // Olay ekle - NodeList'i diziye çevir
+                var items = container.querySelectorAll('.channel-item');
+                for (var j = 0; j < items.length; j++) {
+                    (function(item) {
+                        item.addEventListener('click', function() {
+                            try {
+                                var ch = JSON.parse(item.dataset.channel);
+                                if (self.state.type === 'series') {
+                                    self.showEpisodes(ch);
+                                } else {
+                                    self.play(ch);
+                                }
+                            } catch (e) {
+                                console.error('Kanal tıklama hatası:', e);
+                                self.notify('Kanal oynatma hatası: ' + e.message, 'error');
                             }
-                        } catch (e) {
-                            console.error('Kanal tıklama hatası:', e);
-                            self.notify('Kanal oynatma hatası: ' + e.message, 'error');
-                        }
-                    });
-                });
+                        });
+                    })(items[j]);
+                }
 
-                container.querySelectorAll('.fav-btn').forEach(function(btn) {
-                    btn.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        try {
-                            self.toggleFav(btn.dataset.id);
-                        } catch (err) {
-                            console.error('Favori tıklama hatası:', err);
-                        }
-                    });
-                });
+                var favBtns = container.querySelectorAll('.fav-btn');
+                for (var k = 0; k < favBtns.length; k++) {
+                    (function(btn) {
+                        btn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            try {
+                                self.toggleFav(btn.dataset.id);
+                            } catch (err) {
+                                console.error('Favori tıklama hatası:', err);
+                            }
+                        });
+                    })(favBtns[k]);
+                }
 
                 if (hasMore) {
-                    container.querySelector('.load-more').addEventListener('click', function() {
-                        self.state.page++;
-                        self.renderChannels();
-                    });
+                    var loadMore = container.querySelector('.load-more');
+                    if (loadMore) {
+                        loadMore.addEventListener('click', function() {
+                            self.state.page++;
+                            self.renderChannels();
+                        });
+                    }
                 }
             } catch (e) {
                 console.error('renderChannels hatası:', e);
@@ -1173,11 +1192,20 @@
                     try {
                         document.getElementById('seriesTitle').textContent = series.name || series.title;
                         var list = document.getElementById('episodesList');
-                        var epKeys = data.episodes ? Object.keys(data.episodes) : [];
-                        if (epKeys.length === 0) {
+                        // Object.keys kullanma, for...in döngüsü ile sezonları al
+                        var seasons = [];
+                        if (data.episodes) {
+                            for (var season in data.episodes) {
+                                if (data.episodes.hasOwnProperty(season)) {
+                                    seasons.push(season);
+                                }
+                            }
+                        }
+                        if (seasons.length === 0) {
                             list.innerHTML = '<div class="text-center text-small">Bölüm bulunmuyor</div>';
                         } else {
-                            var seasons = epKeys.sort(function(a, b) { return parseInt(a, 10) - parseInt(b, 10); });
+                            // Sezonları sayısal olarak sırala
+                            seasons.sort(function(a, b) { return parseInt(a, 10) - parseInt(b, 10); });
                             var html = '';
                             for (var s = 0; s < seasons.length; s++) {
                                 var seasonNum = seasons[s];
@@ -1194,19 +1222,22 @@
                             }
                             list.innerHTML = html;
 
-                            list.querySelectorAll('.episode-item').forEach(function(item) {
-                                item.addEventListener('click', function() {
-                                    try {
-                                        var ep = JSON.parse(item.dataset.ep);
-                                        var ser = JSON.parse(item.dataset.series);
-                                        self.playEpisode(ep, ser);
-                                        self.closeModal('episodesModal');
-                                    } catch (e) {
-                                        console.error('Bölüm tıklama hatası:', e);
-                                        self.notify('Bölüm oynatma hatası: ' + e.message, 'error');
-                                    }
-                                });
-                            });
+                            var epItems = list.querySelectorAll('.episode-item');
+                            for (var i = 0; i < epItems.length; i++) {
+                                (function(item) {
+                                    item.addEventListener('click', function() {
+                                        try {
+                                            var ep = JSON.parse(item.dataset.ep);
+                                            var ser = JSON.parse(item.dataset.series);
+                                            self.playEpisode(ep, ser);
+                                            self.closeModal('episodesModal');
+                                        } catch (e) {
+                                            console.error('Bölüm tıklama hatası:', e);
+                                            self.notify('Bölüm oynatma hatası: ' + e.message, 'error');
+                                        }
+                                    });
+                                })(epItems[i]);
+                            }
                             self.notify('✅ ' + seasons.length + ' sezon yüklendi', 'success');
                         }
                         document.getElementById('episodesModal').classList.add('active');
@@ -1245,11 +1276,17 @@
                 var password = this.state.creds.password;
                 var type = this.state.type;
                 var url = '';
+                // stream_id veya id kontrolü
+                var streamId = ch.stream_id || ch.id || ch.num || '';
+                if (!streamId) {
+                    this.notify('❌ Geçersiz kanal ID', 'error');
+                    return;
+                }
                 if (type === 'live') {
-                    url = serverUrl + '/live/' + username + '/' + password + '/' + ch.stream_id + '.m3u8';
+                    url = serverUrl + '/live/' + username + '/' + password + '/' + streamId + '.m3u8';
                 } else if (type === 'movies') {
                     var ext = ch.container_extension || 'mp4';
-                    url = serverUrl + '/movie/' + username + '/' + password + '/' + ch.stream_id + '.' + ext;
+                    url = serverUrl + '/movie/' + username + '/' + password + '/' + streamId + '.' + ext;
                 } else if (type === 'series') {
                     this.showEpisodes(ch);
                     return;
@@ -1333,7 +1370,7 @@
 
         app.getId = function(ch) {
             try {
-                return String(ch.stream_id || ch.series_id || ch.num || Math.random());
+                return String(ch.stream_id || ch.series_id || ch.num || ch.id || Math.random());
             } catch (e) {
                 return String(Math.random());
             }
@@ -1413,22 +1450,25 @@
                     }
                     list.innerHTML = html;
 
-                    list.querySelectorAll('.channel-item').forEach(function(item) {
-                        item.addEventListener('click', function() {
-                            try {
-                                var ch = JSON.parse(item.dataset.ch);
-                                if (self.state.type === 'series') {
-                                    self.showEpisodes(ch);
-                                } else {
-                                    self.play(ch);
+                    var items = list.querySelectorAll('.channel-item');
+                    for (var k = 0; k < items.length; k++) {
+                        (function(item) {
+                            item.addEventListener('click', function() {
+                                try {
+                                    var ch = JSON.parse(item.dataset.ch);
+                                    if (self.state.type === 'series') {
+                                        self.showEpisodes(ch);
+                                    } else {
+                                        self.play(ch);
+                                    }
+                                    self.closeModal('favModal');
+                                } catch (e) {
+                                    console.error('Favori tıklama hatası:', e);
+                                    self.notify('Favori oynatma hatası: ' + e.message, 'error');
                                 }
-                                self.closeModal('favModal');
-                            } catch (e) {
-                                console.error('Favori tıklama hatası:', e);
-                                self.notify('Favori oynatma hatası: ' + e.message, 'error');
-                            }
-                        });
-                    });
+                            });
+                        })(items[k]);
+                    }
                 }
                 document.getElementById('favModal').classList.add('active');
                 this.notify('⭐ ' + favs.length + ' favori kanal gösteriliyor', 'info');
@@ -1540,7 +1580,9 @@
                 this.state.search = '';
                 document.getElementById('searchInput').value = '';
 
-                document.querySelectorAll('.tab').forEach(function(btn) {
+                var tabs = document.querySelectorAll('.tab');
+                for (var i = 0; i < tabs.length; i++) {
+                    var btn = tabs[i];
                     if (btn.dataset.type === type) {
                         btn.classList.remove('inactive');
                         btn.classList.add('active');
@@ -1548,7 +1590,7 @@
                         btn.classList.remove('active');
                         btn.classList.add('inactive');
                     }
-                });
+                }
 
                 this.notify('📺 ' + (type === 'live' ? 'Canlı TV' : type === 'movies' ? 'Filmler' : 'Diziler') + "'e geçiliyor...", 'info');
                 this.loadCategories();
