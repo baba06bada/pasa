@@ -6,7 +6,7 @@
     <title>ÖZKAN IPTV PLAYER</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js"></script>
     <style>
-        /* (Stiller aynı, kısaltmak için tekrar yazmadım, yukarıdakiyle aynı) */
+        /* (Stiller aynı, kısaltmak için tekrar yazmadım) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #ffffff; color: #24292f; line-height: 1.5; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 35, 40, 0.7); z-index: 1000; align-items: center; justify-content: center; }
@@ -296,16 +296,26 @@
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                     if (xhr.status >= 200 && xhr.status < 300) {
-                        if (typeof callback === 'function') callback(xhr.responseText);
+                        if (typeof callback === 'function') {
+                            callback(xhr.responseText);
+                        } else {
+                            console.error('httpRequest: callback is not a function', callback);
+                        }
                     } else {
-                        if (typeof errback === 'function') errback(xhr.statusText || 'HTTP Error ' + xhr.status);
-                        else console.error('HTTP Error:', xhr.statusText);
+                        if (typeof errback === 'function') {
+                            errback(xhr.statusText || 'HTTP Error ' + xhr.status);
+                        } else {
+                            console.error('httpRequest: errback is not a function', errback);
+                        }
                     }
                 }
             };
             xhr.onerror = function() {
-                if (typeof errback === 'function') errback('Network Error');
-                else console.error('Network Error');
+                if (typeof errback === 'function') {
+                    errback('Network Error');
+                } else {
+                    console.error('httpRequest: Network Error and errback missing');
+                }
             };
             xhr.send();
         }
@@ -314,36 +324,57 @@
             httpRequest(method, url, function(text) {
                 try {
                     var data = JSON.parse(text);
-                    if (typeof callback === 'function') callback(data);
+                    if (typeof callback === 'function') {
+                        callback(data);
+                    } else {
+                        console.error('httpRequestJson: callback is not a function', callback);
+                    }
                 } catch (e) {
-                    if (typeof errback === 'function') errback('JSON Parse Error: ' + e.message);
-                    else console.error('JSON Parse Error:', e);
+                    if (typeof errback === 'function') {
+                        errback('JSON Parse Error: ' + e.message);
+                    } else {
+                        console.error('httpRequestJson: JSON parse error and errback missing', e);
+                    }
                 }
             }, errback);
         }
 
-        // ----- Güvenli Veri Çıkarıcı (Object.values KULLANMAZ) -----
-        function extractChannels(data) {
-            // Eğer data null veya undefined ise boş dizi dön
-            if (!data) return [];
+        // ----- Güvenli Veri Çıkarıcı (recursive, Object.values KULLANMAZ) -----
+        function extractChannels(data, depth) {
+            depth = depth || 0;
+            if (depth > 5) return []; // derinlik sınırı
 
+            if (!data) return [];
             if (Array.isArray(data)) {
                 return data;
             }
-
             if (typeof data === 'object') {
-                // En yaygın anahtarları kontrol et
-                var keys = ['streams', 'data', 'list', 'items', 'channels', 'epg', 'series', 'categories', 'category'];
+                // Belirli anahtarları önce kontrol et
+                var keys = [
+                    'streams', 'data', 'list', 'items', 'channels', 'epg', 'series',
+                    'categories', 'category', 'vod_categories', 'series_categories', 'live_categories',
+                    'result', 'results', 'response'
+                ];
                 for (var i = 0; i < keys.length; i++) {
                     var key = keys[i];
                     if (data[key] && Array.isArray(data[key])) {
                         return data[key];
                     }
                 }
-                // Hiçbiri yoksa, objenin ilk dizi değerini al (Object.values yok, manuel döngü)
+                // Hiçbiri yoksa, objenin tüm değerlerini dolaş (Object.values yok, manuel döngü)
                 for (var key in data) {
-                    if (data.hasOwnProperty(key) && Array.isArray(data[key])) {
-                        return data[key];
+                    if (data.hasOwnProperty(key)) {
+                        var val = data[key];
+                        if (Array.isArray(val)) {
+                            return val;
+                        }
+                        // Eğer val bir obje ise, recursive olarak ara
+                        if (typeof val === 'object') {
+                            var result = extractChannels(val, depth + 1);
+                            if (result && result.length > 0) {
+                                return result;
+                            }
+                        }
                     }
                 }
                 return [];
@@ -728,15 +759,20 @@
                 this.notify('🔄 IPTV sunucusuna bağlanılıyor...', 'info');
                 var url = this.buildUrl('player_api.php');
                 httpRequestJson('GET', url, function(data) {
-                    if (data.user_info && data.user_info.auth === 1) {
-                        self.state.userInfo = data.user_info;
-                        self.loadApp();
-                        self.notify('✅ Bağlantı başarılı!', 'success');
-                        self.closeModal('loginModal');
-                    } else {
-                        self.notify('❌ Geçersiz kimlik bilgileri.', 'error');
-                        self.state.creds = null;
-                        self.state.userInfo = null;
+                    try {
+                        if (data.user_info && data.user_info.auth === 1) {
+                            self.state.userInfo = data.user_info;
+                            self.loadApp();
+                            self.notify('✅ Bağlantı başarılı!', 'success');
+                            self.closeModal('loginModal');
+                        } else {
+                            self.notify('❌ Geçersiz kimlik bilgileri.', 'error');
+                            self.state.creds = null;
+                            self.state.userInfo = null;
+                        }
+                    } catch (e) {
+                        console.error('doLogin işleme hatası:', e);
+                        self.notify('❌ Veri işleme hatası: ' + e.message, 'error');
                     }
                 }, function(err) {
                     self.notify('❌ Bağlantı başarısız! ' + err, 'error');
@@ -795,17 +831,22 @@
 
                 var url = this.buildUrl('player_api.php');
                 httpRequestJson('GET', url, function(data) {
-                    if (data.user_info && data.user_info.auth === 1) {
-                        self.state.userInfo = data.user_info;
-                    }
-                    self.closeModal('passwordModal');
-                    self.loadApp();
-                    self.notify('✅ Yapılandırma başarıyla yüklendi!', 'success');
                     try {
-                        if (location.protocol !== 'file:') {
-                            history.replaceState({}, '', location.pathname);
+                        if (data.user_info && data.user_info.auth === 1) {
+                            self.state.userInfo = data.user_info;
                         }
-                    } catch (err) {}
+                        self.closeModal('passwordModal');
+                        self.loadApp();
+                        self.notify('✅ Yapılandırma başarıyla yüklendi!', 'success');
+                        try {
+                            if (location.protocol !== 'file:') {
+                                history.replaceState({}, '', location.pathname);
+                            }
+                        } catch (err) {}
+                    } catch (e) {
+                        console.error('decrypt işleme hatası:', e);
+                        self.notify('❌ Veri işleme hatası: ' + e.message, 'error');
+                    }
                 }, function(err) {
                     self.closeModal('passwordModal');
                     self.loadApp();
@@ -836,7 +877,7 @@
                 expiryEl.classList.add('hidden');
                 return;
             }
-            var expTimestamp = parseInt(this.state.userInfo.exp_date);
+            var expTimestamp = parseInt(this.state.userInfo.exp_date, 10);
             if (!expTimestamp || expTimestamp === 0) {
                 expiryEl.textContent = '📅 Süresiz';
                 expiryEl.classList.remove('hidden');
@@ -877,19 +918,23 @@
                 var url = this.buildUrl('player_api.php', 'action=' + actions[this.state.type]);
                 httpRequestJson('GET', url, function(data) {
                     try {
+                        console.log('Kategori verisi:', data); // Log
                         var cats = extractChannels(data);
                         self.state.categories = cats;
                         self.state.catCache[key] = self.state.categories;
                         self.renderCategories();
                     } catch (e) {
+                        console.error('Kategori işleme hatası:', e);
                         self.state.categories = [];
                         self.notify('⚠️ Kategori işleme hatası: ' + e.message, 'warning');
                     }
                 }, function(err) {
+                    console.error('Kategori yükleme hatası:', err);
                     self.state.categories = [];
                     self.notify('⚠️ Kategoriler yüklenemedi: ' + err, 'warning');
                 });
             } catch (error) {
+                console.error('loadCategories hatası:', error);
                 this.state.categories = [];
                 this.notify('⚠️ Kategoriler yüklenemedi: ' + error.message, 'warning');
             }
@@ -915,6 +960,7 @@
                 var url = this.buildUrl('player_api.php', params);
                 httpRequestJson('GET', url, function(data) {
                     try {
+                        console.log('Kanal verisi:', data); // Log
                         var channels = extractChannels(data);
                         self.state.allChannels = channels;
                         self.state.channels = channels.slice(0);
@@ -924,16 +970,19 @@
                         self.renderChannels();
                         self.notify('✅ ' + self.state.allChannels.length + ' kanal yüklendi', 'success');
                     } catch (e) {
+                        console.error('Kanal işleme hatası:', e);
                         self.state.allChannels = [];
                         self.state.channels = [];
                         document.getElementById('channelsList').innerHTML = '<div class="text-center text-small">Kanal işleme hatası: ' + e.message + '</div>';
                         self.notify('❌ Kanal işleme hatası: ' + e.message, 'error');
                     }
                 }, function(err) {
+                    console.error('Kanal yükleme hatası:', err);
                     document.getElementById('channelsList').innerHTML = '<div class="text-center text-small">Kanallar yüklenemedi: ' + err + '</div>';
                     self.notify('❌ Kanallar yüklenemedi: ' + err, 'error');
                 });
             } catch (error) {
+                console.error('loadChannels hatası:', error);
                 document.getElementById('channelsList').innerHTML = '<div class="text-center text-small">Kanallar yüklenemedi</div>';
                 this.notify('❌ Kanallar yüklenemedi: ' + error.message, 'error');
             }
@@ -1096,12 +1145,15 @@
                         }
                         document.getElementById('episodesModal').classList.add('active');
                     } catch (e) {
+                        console.error('Bölüm işleme hatası:', e);
                         self.notify('❌ Bölüm işleme hatası: ' + e.message, 'error');
                     }
                 }, function(err) {
+                    console.error('Bölüm yükleme hatası:', err);
                     self.notify('❌ Bölümler yüklenemedi: ' + err, 'error');
                 });
             } catch (error) {
+                console.error('showEpisodes hatası:', error);
                 this.notify('❌ Bölümler yüklenemedi: ' + error.message, 'error');
             }
         };
