@@ -6,7 +6,7 @@
     <title>ÖZKAN IPTV PLAYER</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js"></script>
     <style>
-        /* (Stiller aynı, kısaltmak için tekrar yazmadım, yukarıdakiyle aynı) */
+        /* (Stiller aynı, kısaltmak için tekrar yazmadım) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #ffffff; color: #24292f; line-height: 1.5; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 35, 40, 0.7); z-index: 1000; align-items: center; justify-content: center; }
@@ -115,6 +115,7 @@
         .panel-item.active { background: #ddf4ff; border-color: #0969da; font-weight: 600; }
         .panel-item.focused { border-color: #0969da; box-shadow: 0 0 0 2px #0969da; }
         .panel-list-container { height: 100%; overflow-y: auto; }
+        .debug-box { background: #f6f8fa; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; border: 1px solid #d0d7de; margin-top: 12px; }
         @media (min-width: 1024px) { .container { flex-direction: row; } .sidebar { width: 384px; } }
         @media (max-width: 768px) { .header-content { flex-direction: column; } .tabs { flex-wrap: wrap; } .flex { flex-direction: column; } .panel-list { border-right: none !important; padding-right: 0 !important; } .panel-form { padding-left: 0 !important; } }
     </style>
@@ -240,6 +241,11 @@
                 <button type="button" id="closeEpisodes" class="close-btn">&times;</button>
             </div>
             <div id="episodesList" class="flex-1 scrollable"></div>
+            <!-- DEBUG ALANI: Gelen veriyi göster -->
+            <div id="debugContainer" class="hidden" style="margin-top: 12px; border-top: 1px solid #d0d7de; padding-top: 12px;">
+                <p class="text-small">📋 Ham Veri (ilk 500 karakter):</p>
+                <div id="debugData" class="debug-box"></div>
+            </div>
         </div>
     </div>
 
@@ -284,8 +290,8 @@
 
     <script>
         // ============================================================
-        //  SON ÇÖZÜM - DİZİ BÖLÜMLERİ GÖRÜNMÜYORSA
-        //  Modal açılma kontrolü, boş içerik uyarısı, konsol log
+        //  DİZİ BÖLÜMLERİ BOŞ GELİYORSA - DEBUG MODLU
+        //  Gelen veriyi ekranda gösterir
         // ============================================================
 
         var app = {};
@@ -1185,7 +1191,7 @@
         };
 
         // ============================================================
-        //  GELİŞTİRİLMİŞ DİZİ BÖLÜM LİSTELEME (GÖRÜNÜRLÜK KONTROLLÜ)
+        //  DİZİ BÖLÜMLERİ - DEBUG + TÜM ANAHTARLARI TARA
         // ============================================================
         app.showEpisodes = function(series) {
             var self = this;
@@ -1194,13 +1200,21 @@
                 var url = this.buildUrl('player_api.php', 'action=get_series_info&series_id=' + series.series_id);
                 httpRequestJson('GET', url, function(data) {
                     try {
-                        // Modal başlığını ayarla
+                        // DEBUG: Ham veriyi göster
+                        var debugContainer = document.getElementById('debugContainer');
+                        var debugData = document.getElementById('debugData');
+                        debugContainer.classList.remove('hidden');
+                        var dataStr = JSON.stringify(data, null, 2);
+                        if (dataStr.length > 500) dataStr = dataStr.substring(0, 500) + '...';
+                        debugData.textContent = dataStr;
+
                         document.getElementById('seriesTitle').textContent = series.name || series.title;
                         var list = document.getElementById('episodesList');
 
-                        // ---------- 1. Veri yapısını tespit et ----------
+                        // ---------- 1. Tüm olası anahtarları dene ----------
                         var episodesData = null;
-                        var possibleKeys = ['episodes', 'seasons', 'series_episodes', 'data', 'list', 'items'];
+                        // Yaygın anahtarlar
+                        var possibleKeys = ['episodes', 'seasons', 'series_episodes', 'data', 'list', 'items', 'episode', 'season', 'chapters'];
                         for (var i = 0; i < possibleKeys.length; i++) {
                             var key = possibleKeys[i];
                             if (data[key]) {
@@ -1208,32 +1222,35 @@
                                 break;
                             }
                         }
+                        // Eğer hala yoksa, doğrudan data'yı dene
                         if (!episodesData && typeof data === 'object') {
                             episodesData = data;
                         }
 
-                        // ---------- 2. Bölümleri sezonlara göre grupla ----------
+                        // ---------- 2. Sezonları grupla ----------
                         var seasonsMap = {};
 
                         if (Array.isArray(episodesData)) {
-                            // Dizi formatı: her öğede season alanına göre grupla
+                            // Dizi formatı: her öğede season alanı var mı?
                             for (var j = 0; j < episodesData.length; j++) {
                                 var ep = episodesData[j];
-                                var seasonNum = ep.season || ep.season_number || ep.season_no || 1;
+                                var seasonNum = ep.season || ep.season_number || ep.season_no || ep.Season || ep.series_season || 1;
                                 if (!seasonsMap[seasonNum]) {
                                     seasonsMap[seasonNum] = [];
                                 }
                                 seasonsMap[seasonNum].push(ep);
                             }
                         } else if (typeof episodesData === 'object') {
-                            // Obje formatı: anahtarlar sezon numarası
+                            // Obje formatı: anahtarlar sezon numarası veya iç içe
                             for (var seasonKey in episodesData) {
                                 if (episodesData.hasOwnProperty(seasonKey)) {
                                     var val = episodesData[seasonKey];
                                     if (Array.isArray(val)) {
+                                        // Direkt dizi
                                         seasonsMap[seasonKey] = val;
                                     } else if (typeof val === 'object') {
-                                        var subKeys = ['episodes', 'data', 'list', 'items'];
+                                        // İçinde başka bir dizi olabilir
+                                        var subKeys = ['episodes', 'data', 'list', 'items', 'episode', 'season'];
                                         for (var k = 0; k < subKeys.length; k++) {
                                             if (val[subKeys[k]] && Array.isArray(val[subKeys[k]])) {
                                                 seasonsMap[seasonKey] = val[subKeys[k]];
@@ -1257,30 +1274,27 @@
                         // ---------- 4. HTML oluştur ----------
                         var html = '';
                         if (seasonNumbers.length === 0) {
-                            html = '<div class="text-center text-small">⚠️ Bu dizi için sezon bilgisi bulunamadı.<br>API yanıtı: ' + JSON.stringify(data).substring(0, 100) + '...</div>';
+                            html = '<div class="text-center text-small">⚠️ Bu dizi için sezon bilgisi bulunamadı.<br>Yukarıdaki "Ham Veri" bölümünden yanıtı kontrol edin.</div>';
                             list.innerHTML = html;
-                            self.notify('⚠️ Bölüm verisi gelmedi. Konsola bakın.', 'warning');
+                            self.notify('⚠️ Bölüm verisi gelmedi. Ham veriyi inceleyin.', 'warning');
                             console.error('showEpisodes - veri yapısı:', data);
-                            // Modal'ı yine de aç
                             document.getElementById('episodesModal').classList.add('active');
                             return;
                         }
 
-                        // Sezonları ve bölümleri yaz
                         for (var si = 0; si < seasonNumbers.length; si++) {
                             var seasonNum = seasonNumbers[si];
                             var eps = seasonsMap[seasonNum];
                             html += '<div class="season-header">📺 Sezon ' + seasonNum + ' (' + eps.length + ' bölüm)</div>';
-                            // Bölümleri sırala
                             eps.sort(function(a, b) {
-                                var numA = a.episode_num || a.episode_number || a.num || a.id || 0;
-                                var numB = b.episode_num || b.episode_number || b.num || b.id || 0;
+                                var numA = a.episode_num || a.episode_number || a.num || a.id || a.EpisodeNo || 0;
+                                var numB = b.episode_num || b.episode_number || b.num || b.id || b.EpisodeNo || 0;
                                 return parseInt(numA, 10) - parseInt(numB, 10);
                             });
                             for (var ei = 0; ei < eps.length; ei++) {
                                 var ep = eps[ei];
-                                var epNum = ep.episode_num || ep.episode_number || ep.num || ep.id || (ei + 1);
-                                var title = ep.title || ep.name || ep.episode_name || 'Bölüm ' + epNum;
+                                var epNum = ep.episode_num || ep.episode_number || ep.num || ep.id || ep.EpisodeNo || (ei + 1);
+                                var title = ep.title || ep.name || ep.episode_name || ep.EpisodeName || 'Bölüm ' + epNum;
                                 var epJson = JSON.stringify(ep).replace(/'/g, '&apos;');
                                 var seriesJson = JSON.stringify(series).replace(/'/g, '&apos;');
                                 html += '<div class="episode-item" data-ep=\'' + epJson + '\' data-series=\'' + seriesJson + '\'>' +
@@ -1289,26 +1303,13 @@
                             }
                         }
 
-                        // HTML'i listeye yaz
                         list.innerHTML = html;
                         self.notify('✅ ' + seasonNumbers.length + ' sezon yüklendi (' + list.childElementCount + ' bölüm)', 'success');
 
-                        // ---------- 5. Modal'ı aç ----------
+                        // Modal'ı aç
                         document.getElementById('episodesModal').classList.add('active');
-                        // Modal'ın görünür olduğundan emin ol
-                        setTimeout(function() {
-                            var modal = document.getElementById('episodesModal');
-                            if (modal.classList.contains('active')) {
-                                // Başarıyla açıldı
-                                console.log('Modal açıldı, içerik:', list.innerHTML.length);
-                            } else {
-                                // Tekrar dene
-                                modal.classList.add('active');
-                                self.notify('⚠️ Modal açılamadı, tekrar denendi.', 'warning');
-                            }
-                        }, 100);
 
-                        // ---------- 6. Olayları bağla ----------
+                        // Olayları bağla
                         var epItems = list.querySelectorAll('.episode-item');
                         for (var ei2 = 0; ei2 < epItems.length; ei2++) {
                             (function(item) {
@@ -1330,7 +1331,6 @@
                         console.error('Bölüm işleme hatası:', e);
                         document.getElementById('episodesList').innerHTML = '<div class="text-center text-small">❌ Bölüm işleme hatası: ' + e.message + '</div>';
                         self.notify('❌ Bölüm işleme hatası: ' + e.message, 'error');
-                        // Modal'ı yine de aç
                         document.getElementById('episodesModal').classList.add('active');
                     }
                 }, function(err) {
@@ -1352,8 +1352,8 @@
                 var serverUrl = this.state.creds.serverUrl;
                 var username = this.state.creds.username;
                 var password = this.state.creds.password;
-                var ext = ep.container_extension || 'mp4';
-                var epId = ep.id || ep.stream_id || ep.num || '';
+                var ext = ep.container_extension || ep.ext || 'mp4';
+                var epId = ep.id || ep.stream_id || ep.num || ep.episode_id || '';
                 if (!epId) {
                     this.notify('❌ Bölüm ID bulunamadı', 'error');
                     return;
