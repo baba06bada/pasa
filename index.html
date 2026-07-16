@@ -6,7 +6,7 @@
     <title>ÖZKAN IPTV PLAYER</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js"></script>
     <style>
-        /* (Stiller aynı, kısaltmak için tekrar yazmadım, yukarıdakiyle aynı) */
+        /* (Stiller aynı) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #ffffff; color: #24292f; line-height: 1.5; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 35, 40, 0.7); z-index: 1000; align-items: center; justify-content: center; }
@@ -322,26 +322,26 @@
             }, errback);
         }
 
-        // Veriyi diziye dönüştür (API'den farklı yapılar gelebilir)
+        // ----- Güvenli Veri Çıkarıcı (Object.values KULLANMAZ) -----
         function extractChannels(data) {
             if (Array.isArray(data)) {
                 return data;
             }
             if (data && typeof data === 'object') {
-                // Yaygın alan adları
+                // En yaygın anahtarları kontrol et
                 var keys = ['streams', 'data', 'list', 'items', 'channels', 'epg', 'series'];
                 for (var i = 0; i < keys.length; i++) {
                     var key = keys[i];
-                    if (Array.isArray(data[key])) {
+                    if (data[key] && Array.isArray(data[key])) {
                         return data[key];
                     }
                 }
-                // Eğer objenin değerlerinden biri dizi ise onu al
-                var values = Object.values(data);
-                if (values.length === 1 && Array.isArray(values[0])) {
-                    return values[0];
+                // Hiçbiri yoksa, objenin ilk dizi değerini al (Object.values yok, manuel döngü)
+                for (var key in data) {
+                    if (data.hasOwnProperty(key) && Array.isArray(data[key])) {
+                        return data[key];
+                    }
                 }
-                // Hiçbiri yoksa boş dizi
                 return [];
             }
             return [];
@@ -872,11 +872,15 @@
                 this.notify('📂 Kategoriler yükleniyor...', 'info');
                 var url = this.buildUrl('player_api.php', 'action=' + actions[this.state.type]);
                 httpRequestJson('GET', url, function(data) {
-                    // Kategoriler genelde dizi olur, ama yine de kontrol edelim
-                    var cats = extractChannels(data);
-                    self.state.categories = cats;
-                    self.state.catCache[key] = self.state.categories;
-                    self.renderCategories();
+                    try {
+                        var cats = extractChannels(data);
+                        self.state.categories = cats;
+                        self.state.catCache[key] = self.state.categories;
+                        self.renderCategories();
+                    } catch (e) {
+                        self.state.categories = [];
+                        self.notify('⚠️ Kategori işleme hatası: ' + e.message, 'warning');
+                    }
                 }, function(err) {
                     self.state.categories = [];
                     self.notify('⚠️ Kategoriler yüklenemedi: ' + err, 'warning');
@@ -906,15 +910,21 @@
                 if (this.state.category !== 'all') params += '&category_id=' + this.state.category;
                 var url = this.buildUrl('player_api.php', params);
                 httpRequestJson('GET', url, function(data) {
-                    // Veriyi diziye dönüştür
-                    var channels = extractChannels(data);
-                    self.state.allChannels = channels;
-                    self.state.channels = channels.slice(0);
-                    self.state.cache[key] = self.state.allChannels;
-                    self.resetPage();
-                    self.renderCategories();
-                    self.renderChannels();
-                    self.notify('✅ ' + self.state.allChannels.length + ' kanal yüklendi', 'success');
+                    try {
+                        var channels = extractChannels(data);
+                        self.state.allChannels = channels;
+                        self.state.channels = channels.slice(0);
+                        self.state.cache[key] = self.state.allChannels;
+                        self.resetPage();
+                        self.renderCategories();
+                        self.renderChannels();
+                        self.notify('✅ ' + self.state.allChannels.length + ' kanal yüklendi', 'success');
+                    } catch (e) {
+                        self.state.allChannels = [];
+                        self.state.channels = [];
+                        document.getElementById('channelsList').innerHTML = '<div class="text-center text-small">Kanal işleme hatası: ' + e.message + '</div>';
+                        self.notify('❌ Kanal işleme hatası: ' + e.message, 'error');
+                    }
                 }, function(err) {
                     document.getElementById('channelsList').innerHTML = '<div class="text-center text-small">Kanallar yüklenemedi: ' + err + '</div>';
                     self.notify('❌ Kanallar yüklenemedi: ' + err, 'error');
@@ -1046,39 +1056,44 @@
                 this.notify('📺 Bölümler yükleniyor...', 'info');
                 var url = this.buildUrl('player_api.php', 'action=get_series_info&series_id=' + series.series_id);
                 httpRequestJson('GET', url, function(data) {
-                    document.getElementById('seriesTitle').textContent = series.name || series.title;
-                    var list = document.getElementById('episodesList');
-                    if (!data.episodes || Object.keys(data.episodes).length === 0) {
-                        list.innerHTML = '<div class="text-center text-small">Bölüm bulunmuyor</div>';
-                    } else {
-                        var seasons = Object.keys(data.episodes).sort(function(a, b) { return a - b; });
-                        var html = '';
-                        for (var s = 0; s < seasons.length; s++) {
-                            var seasonNum = seasons[s];
-                            var eps = data.episodes[seasonNum];
-                            html += '<div class="season-header">Sezon ' + seasonNum + '</div>';
-                            for (var e = 0; e < eps.length; e++) {
-                                var ep = eps[e];
-                                var epJson = JSON.stringify(ep).replace(/'/g, '&apos;');
-                                var seriesJson = JSON.stringify(series).replace(/'/g, '&apos;');
-                                html += '<div class="episode-item" data-ep=\'' + epJson + '\' data-series=\'' + seriesJson + '\'>' +
-                                    '<h3>Bölüm ' + ep.episode_num + ': ' + self.escape(ep.title || 'Başlıksız') + '</h3>' +
-                                    '</div>';
+                    try {
+                        document.getElementById('seriesTitle').textContent = series.name || series.title;
+                        var list = document.getElementById('episodesList');
+                        var epKeys = data.episodes ? Object.keys(data.episodes) : [];
+                        if (epKeys.length === 0) {
+                            list.innerHTML = '<div class="text-center text-small">Bölüm bulunmuyor</div>';
+                        } else {
+                            var seasons = epKeys.sort(function(a, b) { return parseInt(a) - parseInt(b); });
+                            var html = '';
+                            for (var s = 0; s < seasons.length; s++) {
+                                var seasonNum = seasons[s];
+                                var eps = data.episodes[seasonNum];
+                                html += '<div class="season-header">Sezon ' + seasonNum + '</div>';
+                                for (var e = 0; e < eps.length; e++) {
+                                    var ep = eps[e];
+                                    var epJson = JSON.stringify(ep).replace(/'/g, '&apos;');
+                                    var seriesJson = JSON.stringify(series).replace(/'/g, '&apos;');
+                                    html += '<div class="episode-item" data-ep=\'' + epJson + '\' data-series=\'' + seriesJson + '\'>' +
+                                        '<h3>Bölüm ' + ep.episode_num + ': ' + self.escape(ep.title || 'Başlıksız') + '</h3>' +
+                                        '</div>';
+                                }
                             }
-                        }
-                        list.innerHTML = html;
+                            list.innerHTML = html;
 
-                        list.querySelectorAll('.episode-item').forEach(function(item) {
-                            item.addEventListener('click', function() {
-                                var ep = JSON.parse(item.dataset.ep);
-                                var ser = JSON.parse(item.dataset.series);
-                                self.playEpisode(ep, ser);
-                                self.closeModal('episodesModal');
+                            list.querySelectorAll('.episode-item').forEach(function(item) {
+                                item.addEventListener('click', function() {
+                                    var ep = JSON.parse(item.dataset.ep);
+                                    var ser = JSON.parse(item.dataset.series);
+                                    self.playEpisode(ep, ser);
+                                    self.closeModal('episodesModal');
+                                });
                             });
-                        });
-                        self.notify('✅ ' + Object.keys(data.episodes).length + ' sezon yüklendi', 'success');
+                            self.notify('✅ ' + seasons.length + ' sezon yüklendi', 'success');
+                        }
+                        document.getElementById('episodesModal').classList.add('active');
+                    } catch (e) {
+                        self.notify('❌ Bölüm işleme hatası: ' + e.message, 'error');
                     }
-                    document.getElementById('episodesModal').classList.add('active');
                 }, function(err) {
                     self.notify('❌ Bölümler yüklenemedi: ' + err, 'error');
                 });
@@ -1108,7 +1123,6 @@
                 var ext = ch.container_extension || 'mp4';
                 url = serverUrl + '/movie/' + username + '/' + password + '/' + ch.stream_id + '.' + ext;
             } else if (type === 'series') {
-                // Dizi için özel bir oynatma yok, bölüm seçimi yapılır
                 this.showEpisodes(ch);
                 return;
             }
