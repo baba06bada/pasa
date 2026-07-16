@@ -285,7 +285,8 @@
     <script>
         // ============================================================
         //  KESİN ÇÖZÜM - SADECE ES5 - LG webOS 2.2.3 / Chrome 34
-        //  let, const, arrow, forEach, Object.keys, template literals YOK
+        //  HLS.js yüklenemezse doğrudan video.src ile dene (yerel destek)
+        //  Dizi bölümleri için tüm olası anahtarları tara
         // ============================================================
 
         var app = {};
@@ -348,14 +349,13 @@
             }, errback);
         }
 
-        // ----- Veri çıkarıcı (güvenli, ES5, Object.keys KULLANMAZ) -----
+        // ----- Veri çıkarıcı (güvenli, ES5) -----
         function extractChannels(data) {
             try {
                 if (!data) return [];
                 if (Array.isArray(data)) return data;
                 if (typeof data !== 'object') return [];
 
-                // Bilinen anahtarları kontrol et
                 var keys = [
                     'streams', 'data', 'list', 'items', 'channels', 'epg', 'series',
                     'categories', 'category', 'vod_categories', 'series_categories', 'live_categories',
@@ -367,8 +367,6 @@
                         return data[key];
                     }
                 }
-
-                // Hiçbiri yoksa, objenin ilk dizi değerini döndür
                 for (var prop in data) {
                     if (data.hasOwnProperty(prop) && Array.isArray(data[prop])) {
                         return data[prop];
@@ -447,12 +445,10 @@
                 this.renderPanelList();
                 this.bindRemoteKeys();
                 // HLS.js kontrolü
-                if (typeof Hls === 'undefined') {
-                    this.notify('⚠️ HLS.js yüklenemedi. Canlı yayınlar çalışmaz.', 'error');
-                } else if (!Hls.isSupported()) {
-                    this.notify('⚠️ Tarayıcı HLS desteklemiyor.', 'error');
-                } else {
+                if (typeof Hls !== 'undefined') {
                     this.notify('✅ HLS.js hazır.', 'info');
+                } else {
+                    this.notify('⚠️ HLS.js yüklenemedi. Tarayıcının yerel HLS desteği deneniyor.', 'warning');
                 }
             } catch (e) {
                 console.error('init hatası:', e);
@@ -1115,7 +1111,6 @@
 
                 container.innerHTML = html;
 
-                // Olay ekle - NodeList'i diziye çevirmeden doğrudan indeksle
                 var items = container.querySelectorAll('.channel-item');
                 for (var j = 0; j < items.length; j++) {
                     (function(item) {
@@ -1201,24 +1196,41 @@
                     try {
                         document.getElementById('seriesTitle').textContent = series.name || series.title;
                         var list = document.getElementById('episodesList');
-                        // Object.keys kullanma, for...in döngüsü ile sezonları al
+
+                        // ---------- Bölümleri bul (tüm olası anahtarlar) ----------
+                        var episodesObj = null;
+                        var possibleKeys = ['episodes', 'seasons', 'series_episodes', 'data', 'list', 'items'];
+                        for (var i = 0; i < possibleKeys.length; i++) {
+                            var key = possibleKeys[i];
+                            if (data[key] && typeof data[key] === 'object') {
+                                episodesObj = data[key];
+                                break;
+                            }
+                        }
+                        // Eğer hala bulunamadıysa, doğrudan data'yı dene
+                        if (!episodesObj && typeof data === 'object') {
+                            episodesObj = data;
+                        }
+
+                        // Şimdi episodesObj içinde sezonları bul
                         var seasons = [];
-                        if (data.episodes) {
-                            for (var season in data.episodes) {
-                                if (data.episodes.hasOwnProperty(season)) {
+                        if (episodesObj) {
+                            for (var season in episodesObj) {
+                                if (episodesObj.hasOwnProperty(season) && Array.isArray(episodesObj[season])) {
                                     seasons.push(season);
                                 }
                             }
                         }
+
                         if (seasons.length === 0) {
                             list.innerHTML = '<div class="text-center text-small">Bölüm bulunmuyor</div>';
+                            self.notify('⚠️ Bu dizi için bölüm verisi gelmedi.', 'warning');
                         } else {
-                            // Sezonları sayısal olarak sırala
                             seasons.sort(function(a, b) { return parseInt(a, 10) - parseInt(b, 10); });
                             var html = '';
                             for (var s = 0; s < seasons.length; s++) {
                                 var seasonNum = seasons[s];
-                                var eps = data.episodes[seasonNum];
+                                var eps = episodesObj[seasonNum];
                                 html += '<div class="season-header">Sezon ' + seasonNum + '</div>';
                                 for (var e = 0; e < eps.length; e++) {
                                     var ep = eps[e];
@@ -1232,7 +1244,7 @@
                             list.innerHTML = html;
 
                             var epItems = list.querySelectorAll('.episode-item');
-                            for (var i = 0; i < epItems.length; i++) {
+                            for (var j = 0; j < epItems.length; j++) {
                                 (function(item) {
                                     item.addEventListener('click', function() {
                                         try {
@@ -1245,7 +1257,7 @@
                                             self.notify('Bölüm oynatma hatası: ' + e.message, 'error');
                                         }
                                     });
-                                })(epItems[i]);
+                                })(epItems[j]);
                             }
                             self.notify('✅ ' + seasons.length + ' sezon yüklendi', 'success');
                         }
@@ -1334,6 +1346,7 @@
                 setTimeout(function() {
                     try {
                         if (url.indexOf('.m3u8') !== -1) {
+                            // Önce HLS.js dene
                             if (typeof Hls !== 'undefined' && Hls.isSupported()) {
                                 self.state.hls = new Hls({ enableWorker: true, lowLatencyMode: true });
                                 self.state.hls.loadSource(url);
@@ -1345,7 +1358,11 @@
                                     if (data.fatal) self.notify('❌ Akış hatası oluştu: ' + (data.details || ''), 'error');
                                 });
                             } else {
-                                self.notify('❌ HLS desteklenmiyor veya HLS.js yüklenmemiş.', 'error');
+                                // HLS.js yok veya desteklemiyor, doğrudan video.src'ye dene (yerel HLS desteği)
+                                self.notify('⚠️ HLS.js kullanılamıyor, doğrudan oynatmayı deniyorum.', 'warning');
+                                player.src = url;
+                                player.load();
+                                player.play()['catch'](function() { self.notify('❌ Oynatma başarısız (yerel HLS desteklenmiyor olabilir).', 'error'); });
                             }
                         } else {
                             player.src = url;
