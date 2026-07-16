@@ -6,7 +6,7 @@
     <title>ÖZKAN IPTV PLAYER</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js"></script>
     <style>
-        /* (Stiller aynı, kısaltmak için tekrar yazmadım) */
+        /* (Stiller öncekiyle aynı, kısaltmak için tekrar yazmadım) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #ffffff; color: #24292f; line-height: 1.5; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 35, 40, 0.7); z-index: 1000; align-items: center; justify-content: center; }
@@ -289,8 +289,8 @@
 
     <script>
         // ============================================================
-        //  DİZİ BÖLÜMLERİ - EN BASİT VE GÜVENLİ YAKLAŞIM
-        //  Sadece seasons anahtarını kullan, bölüm yoksa uyarı ver
+        //  GÜNCEL KOD - DİZİ BÖLÜMLERİ İÇİN DEBUG ALANI EKLENDİ
+        //  Lütfen bir diziye tıklayın ve modal'daki ham veriyi bana iletin
         // ============================================================
 
         var app = {};
@@ -1190,7 +1190,7 @@
         };
 
         // ============================================================
-        //  DİZİ BÖLÜMLERİ - SADECE seasons KULLAN, BÖLÜM YOKSA UYARI
+        //  DİZİ BÖLÜMLERİ - DEBUG MODU (Ham veriyi gösterir)
         // ============================================================
         app.showEpisodes = function(series) {
             var self = this;
@@ -1199,7 +1199,7 @@
                 var url = this.buildUrl('player_api.php', 'action=get_series_info&series_id=' + series.series_id);
                 httpRequestJson('GET', url, function(data) {
                     try {
-                        // Debug: ham veriyi göster
+                        // --- DEBUG: Ham veriyi göster ---
                         var debugData = document.getElementById('debugData');
                         var dataStr = JSON.stringify(data, null, 2);
                         if (dataStr.length > 500) dataStr = dataStr.substring(0, 500) + '...';
@@ -1208,55 +1208,104 @@
                         document.getElementById('seriesTitle').textContent = series.name || series.title;
                         var list = document.getElementById('episodesList');
 
-                        // ---------- 1. seasons verisini al ----------
+                        // --- 1. Önce doğrudan data.episodes var mı? ---
+                        var episodesData = data.episodes || data.Episodes || data.episode || data.Episode;
                         var seasonsData = data.seasons || data.Seasons || data.season || data.Season;
-                        if (!seasonsData || !Array.isArray(seasonsData) || seasonsData.length === 0) {
-                            list.innerHTML = '<div class="text-center text-small">⚠️ Bu dizi için sezon bilgisi bulunamadı.</div>';
-                            self.notify('⚠️ Sezon verisi yok.', 'warning');
-                            document.getElementById('episodesModal').classList.add('active');
-                            return;
-                        }
 
-                        // ---------- 2. Sezonları listele ----------
-                        var html = '';
-                        for (var i = 0; i < seasonsData.length; i++) {
-                            var season = seasonsData[i];
-                            var seasonNum = season.season_number || season.number || season.id || (i + 1);
-                            var seasonName = season.name || 'Sezon ' + seasonNum;
-                            // Bölüm sayısı varsa göster
-                            var episodeCount = season.episode_count || season.episodeCount || season.episode || '';
-                            var countText = episodeCount ? ' (' + episodeCount + ' bölüm)' : '';
-                            html += '<div class="season-header">📺 ' + seasonName + countText + '</div>';
+                        // --- 2. Eğer episodesData varsa, sezonlara ayır ---
+                        var seasonsMap = {};
+                        var hasEpisodes = false;
 
-                            // Bölüm listesi yoksa uyarı ekle
-                            var episodes = season.episodes || season.Episodes || season.episode || season.data;
-                            if (episodes && Array.isArray(episodes) && episodes.length > 0) {
-                                // Bölümleri sırala
-                                episodes.sort(function(a, b) {
-                                    var numA = a.episode_num || a.episode_number || a.num || a.id || 0;
-                                    var numB = b.episode_num || b.episode_number || b.num || b.id || 0;
-                                    return parseInt(numA, 10) - parseInt(numB, 10);
-                                });
-                                for (var j = 0; j < episodes.length; j++) {
-                                    var ep = episodes[j];
-                                    var epNum = ep.episode_num || ep.episode_number || ep.num || ep.id || (j + 1);
-                                    var title = ep.title || ep.name || ep.episode_name || 'Bölüm ' + epNum;
-                                    var epJson = JSON.stringify(ep).replace(/'/g, '&apos;');
-                                    var seriesJson = JSON.stringify(series).replace(/'/g, '&apos;');
-                                    html += '<div class="episode-item" data-ep=\'' + epJson + '\' data-series=\'' + seriesJson + '\'>' +
-                                        '<h3>🎬 Bölüm ' + epNum + ': ' + self.escape(title) + '</h3>' +
-                                        '</div>';
+                        if (episodesData) {
+                            if (Array.isArray(episodesData) && episodesData.length > 0) {
+                                // Dizi formatı
+                                for (var j = 0; j < episodesData.length; j++) {
+                                    var ep = episodesData[j];
+                                    var seasonNum = ep.season || ep.season_number || ep.season_no || ep.Season || 1;
+                                    if (!seasonsMap[seasonNum]) {
+                                        seasonsMap[seasonNum] = [];
+                                    }
+                                    seasonsMap[seasonNum].push(ep);
                                 }
-                            } else {
-                                html += '<div class="text-small" style="padding: 8px 16px; color: #57606a;">⚠️ Bölüm listesi mevcut değil</div>';
+                                hasEpisodes = true;
+                            } else if (typeof episodesData === 'object') {
+                                // Obje formatı (anahtarlar sezon numarası)
+                                for (var seasonKey in episodesData) {
+                                    if (episodesData.hasOwnProperty(seasonKey)) {
+                                        var val = episodesData[seasonKey];
+                                        if (Array.isArray(val) && val.length > 0) {
+                                            seasonsMap[seasonKey] = val;
+                                            hasEpisodes = true;
+                                        }
+                                    }
+                                }
                             }
                         }
 
+                        // --- 3. Eğer episodesData yoksa, seasonsData'dan sezonları al ---
+                        if (!hasEpisodes && seasonsData && Array.isArray(seasonsData)) {
+                            for (var i = 0; i < seasonsData.length; i++) {
+                                var season = seasonsData[i];
+                                var seasonNum = season.season_number || season.number || season.id || (i + 1);
+                                // Sezon içinde episodes var mı?
+                                var seasonEpisodes = season.episodes || season.Episodes || season.episode || season.data;
+                                if (seasonEpisodes && Array.isArray(seasonEpisodes) && seasonEpisodes.length > 0) {
+                                    seasonsMap[seasonNum] = seasonEpisodes;
+                                    hasEpisodes = true;
+                                } else {
+                                    // Bölüm yok, boş dizi ekle (sadece sezon başlığı gösterilecek)
+                                    seasonsMap[seasonNum] = [];
+                                }
+                            }
+                        }
+
+                        // --- 4. Sezon numaralarını topla ---
+                        var seasonNumbers = [];
+                        for (var s in seasonsMap) {
+                            if (seasonsMap.hasOwnProperty(s)) {
+                                seasonNumbers.push(s);
+                            }
+                        }
+                        seasonNumbers.sort(function(a, b) { return parseInt(a, 10) - parseInt(b, 10); });
+
+                        // --- 5. HTML oluştur ---
+                        var html = '';
+                        if (seasonNumbers.length === 0) {
+                            html = '<div class="text-center text-small">⚠️ Bu dizi için sezon bilgisi bulunamadı.</div>';
+                            self.notify('⚠️ Sezon verisi yok.', 'warning');
+                        } else {
+                            for (var si = 0; si < seasonNumbers.length; si++) {
+                                var sn = seasonNumbers[si];
+                                var eps = seasonsMap[sn] || [];
+                                if (eps.length === 0) {
+                                    html += '<div class="season-header">📺 Sezon ' + sn + '</div>';
+                                    html += '<div class="text-small" style="padding: 8px 16px; color: #57606a;">Bölüm listesi mevcut değil</div>';
+                                } else {
+                                    html += '<div class="season-header">📺 Sezon ' + sn + ' (' + eps.length + ' bölüm)</div>';
+                                    eps.sort(function(a, b) {
+                                        var numA = a.episode_num || a.episode_number || a.num || a.id || a.EpisodeNo || 0;
+                                        var numB = b.episode_num || b.episode_number || b.num || b.id || b.EpisodeNo || 0;
+                                        return parseInt(numA, 10) - parseInt(numB, 10);
+                                    });
+                                    for (var ei = 0; ei < eps.length; ei++) {
+                                        var ep = eps[ei];
+                                        var epNum = ep.episode_num || ep.episode_number || ep.num || ep.id || ep.EpisodeNo || (ei + 1);
+                                        var title = ep.title || ep.name || ep.episode_name || ep.EpisodeName || 'Bölüm ' + epNum;
+                                        var epJson = JSON.stringify(ep).replace(/'/g, '&apos;');
+                                        var seriesJson = JSON.stringify(series).replace(/'/g, '&apos;');
+                                        html += '<div class="episode-item" data-ep=\'' + epJson + '\' data-series=\'' + seriesJson + '\'>' +
+                                            '<h3>🎬 Bölüm ' + epNum + ': ' + self.escape(title) + '</h3>' +
+                                            '</div>';
+                                    }
+                                }
+                            }
+                            self.notify('✅ ' + seasonNumbers.length + ' sezon gösteriliyor.', 'success');
+                        }
+
                         list.innerHTML = html;
-                        self.notify('✅ ' + seasonsData.length + ' sezon gösteriliyor.', 'success');
                         document.getElementById('episodesModal').classList.add('active');
 
-                        // ---------- 3. Bölüm olaylarını bağla ----------
+                        // --- 6. Bölüm olaylarını bağla ---
                         var epItems = list.querySelectorAll('.episode-item');
                         for (var k = 0; k < epItems.length; k++) {
                             (function(item) {
