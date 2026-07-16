@@ -6,7 +6,7 @@
     <title>ÖZKAN IPTV PLAYER</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js"></script>
     <style>
-        /* (Stiller aynı) */
+        /* (Stiller aynı, kısaltmak için tekrar yazmadım, yukarıdakiyle aynı) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #ffffff; color: #24292f; line-height: 1.5; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 35, 40, 0.7); z-index: 1000; align-items: center; justify-content: center; }
@@ -296,15 +296,15 @@
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                     if (xhr.status >= 200 && xhr.status < 300) {
-                        if (callback) callback(xhr.responseText);
+                        if (typeof callback === 'function') callback(xhr.responseText);
                     } else {
-                        if (errback) errback(xhr.statusText || 'HTTP Error ' + xhr.status);
+                        if (typeof errback === 'function') errback(xhr.statusText || 'HTTP Error ' + xhr.status);
                         else console.error('HTTP Error:', xhr.statusText);
                     }
                 }
             };
             xhr.onerror = function() {
-                if (errback) errback('Network Error');
+                if (typeof errback === 'function') errback('Network Error');
                 else console.error('Network Error');
             };
             xhr.send();
@@ -314,9 +314,9 @@
             httpRequest(method, url, function(text) {
                 try {
                     var data = JSON.parse(text);
-                    if (callback) callback(data);
+                    if (typeof callback === 'function') callback(data);
                 } catch (e) {
-                    if (errback) errback('JSON Parse Error: ' + e.message);
+                    if (typeof errback === 'function') errback('JSON Parse Error: ' + e.message);
                     else console.error('JSON Parse Error:', e);
                 }
             }, errback);
@@ -324,12 +324,16 @@
 
         // ----- Güvenli Veri Çıkarıcı (Object.values KULLANMAZ) -----
         function extractChannels(data) {
+            // Eğer data null veya undefined ise boş dizi dön
+            if (!data) return [];
+
             if (Array.isArray(data)) {
                 return data;
             }
-            if (data && typeof data === 'object') {
+
+            if (typeof data === 'object') {
                 // En yaygın anahtarları kontrol et
-                var keys = ['streams', 'data', 'list', 'items', 'channels', 'epg', 'series'];
+                var keys = ['streams', 'data', 'list', 'items', 'channels', 'epg', 'series', 'categories', 'category'];
                 for (var i = 0; i < keys.length; i++) {
                     var key = keys[i];
                     if (data[key] && Array.isArray(data[key])) {
@@ -887,7 +891,7 @@
                 });
             } catch (error) {
                 this.state.categories = [];
-                this.notify('⚠️ Kategoriler yüklenemedi', 'warning');
+                this.notify('⚠️ Kategoriler yüklenemedi: ' + error.message, 'warning');
             }
         };
 
@@ -1063,7 +1067,7 @@
                         if (epKeys.length === 0) {
                             list.innerHTML = '<div class="text-center text-small">Bölüm bulunmuyor</div>';
                         } else {
-                            var seasons = epKeys.sort(function(a, b) { return parseInt(a) - parseInt(b); });
+                            var seasons = epKeys.sort(function(a, b) { return parseInt(a, 10) - parseInt(b, 10); });
                             var html = '';
                             for (var s = 0; s < seasons.length; s++) {
                                 var seasonNum = seasons[s];
