@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ÖZKAN IPTV PLAYER</title>
+    <!-- HLS.js eski sürüm (Chrome 34 uyumlu) -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js"></script>
+    <style>
+        /* (Stiller aynı, sadece odak yönetimi için eklentiler) */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #ffffff; color: #24292f; line-height: 1.5; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 35, 40, 0.7); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; border-radius: 8px; padding: 32px; max-width: 500px; width: 90%; border: 1px solid #d0d7de; box-shadow: 0 16px 32px rgba(31, 35, 40, 0.15); }
+        .modal-content-large { max-width: 900px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
+        .notification { position: fixed; top: 20px; right: 20px; background: #ffffff; color: #24292f; padding: 16px 24px; border-radius: 6px; box-shadow: 0 8px 16px rgba(31, 35, 40, 0.2); border: 1px solid #d0d7de; z-index: 2000; animation: slideIn 0.3s ease-out; max-width: 400px; }
+        .notification.success { border-left: 4px solid #1a7f37; }
+        .notification.error { border-left: 4px solid #cf222e; }
+        .notification.info { border-left: 4px solid #0969da; }
+        .notification.warning { border-left: 4px solid #bf8700; }
+        .notification.hiding { animation: slideOut 0.3s ease-in; }
+        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(400px); opacity: 0; } }
+        h1 { font-size: 24px; font-weight: 700; margin: 0; }
+        h2 { font-size: 20px; font-weight: 700; margin: 0 0 16px 0; }
+        h3 { font-size: 16px; font-weight: 600; margin: 0 0 8px 0; }
+        label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #24292f; }
+        input, select { width: 100%; padding: 12px 16px; background: #ffffff; border: 1px solid #d0d7de; border-radius: 6px; color: #24292f; font-size: 16px; transition: all 0.15s; }
+        input:focus, select:focus { outline: none; border-color: #0969da; box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1); }
+        .btn { padding: 8px 16px; border: 1px solid #d0d7de; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.15s; font-size: 14px; }
+        .btn-primary { background: #0969da; color: white; border-color: #0969da; }
+        .btn-primary:hover { background: #0860ca; border-color: #0860ca; }
+        .btn-secondary { background: #f6f8fa; color: #24292f; }
+        .btn-secondary:hover { background: #f3f4f6; border-color: #afb8c1; }
+        .btn-danger { background: #cf222e; color: white; border-color: #cf222e; }
+        .btn-danger:hover { background: #b5212e; border-color: #b5212e; }
+        .btn-success { background: #1a7f37; color: white; border-color: #1a7f37; }
+        .btn-success:hover { background: #1a7731; border-color: #1a7731; }
+        .btn-full { width: 100%; padding: 12px 24px; font-size: 16px; font-weight: 600; }
+        .form-group { margin-bottom: 16px; }
+        .text-center { text-align: center; }
+        .text-small { font-size: 14px; color: #57606a; }
+        .mb-2 { margin-bottom: 8px; }
+        .mb-4 { margin-bottom: 16px; }
+        .mt-4 { margin-top: 16px; }
+        .flex { display: flex; }
+        .flex-wrap { flex-wrap: wrap; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-end { justify-content: flex-end; }
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 12px; }
+        .gap-4 { gap: 16px; }
+        header { background: white; border-bottom: 1px solid #d0d7de; padding: 16px 24px; box-shadow: 0 1px 0 rgba(31, 35, 40, 0.04); }
+        .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .header-buttons { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; background: #f6f8fa; color: #24292f; border: 1px solid #d0d7de; }
+        .badge-primary { background: #ddf4ff; color: #0969da; border-color: #c1dff8; }
+        .badge-success { background: #dafbe1; color: #1a7f37; border-color: #c2e8ce; }
+        .badge-warning { background: #fff8c5; color: #9a6700; border-color: #f4e8aa; }
+        .badge-danger { background: #ffebe9; color: #cf222e; border-color: #ffd8d3; }
+        nav { background: #f6f8fa; border-bottom: 1px solid #d0d7de; padding: 12px 24px; }
+        .tabs { display: flex; gap: 8px; }
+        .tab { padding: 8px 24px; border-radius: 6px; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; }
+        .tab.active { background: #0969da; color: white; }
+        .tab.inactive { background: white; color: #57606a; border-color: #d0d7de; }
+        .tab.inactive:hover { background: #f6f8fa; }
+        .container { display: flex; flex-direction: column; height: calc(100vh - 160px); }
+        .sidebar { width: 100%; background: #f6f8fa; border-right: 1px solid #d0d7de; display: flex; flex-direction: column; }
+        .sidebar-section { padding: 16px; border-bottom: 1px solid #d0d7de; background: white; }
+        .channels-list { flex: 1; overflow-y: auto; padding: 16px; }
+        .channel-item { background: white; border-radius: 6px; padding: 16px; margin-bottom: 8px; border: 1px solid #d0d7de; cursor: pointer; transition: all 0.15s; }
+        .channel-item:hover { background: #f6f8fa; transform: translateY(-1px); box-shadow: 0 3px 8px rgba(31, 35, 40, 0.12); }
+        .channel-item.focused { border-color: #0969da; box-shadow: 0 0 0 2px #0969da; }
+        .channel-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+        .channel-info { flex: 1; min-width: 0; }
+        .channel-name { font-weight: 600; font-size: 16px; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .fav-btn { font-size: 24px; cursor: pointer; border: none; background: none; padding: 0; transition: all 0.15s; }
+        .fav-btn.active { color: #bf8700; }
+        .fav-btn.inactive { color: #d0d7de; }
+        .fav-btn:hover { transform: scale(1.1); }
+        .player-container { flex: 1; background: #000; position: relative; display: flex; align-items: center; justify-content: center; }
+        .placeholder { text-align: center; color: #9ca3af; }
+        .placeholder-icon { font-size: 64px; margin-bottom: 16px; }
+        video { width: 100%; height: 100%; background: #000; }
+        .video-info { position: absolute; top: 16px; left: 16px; background: rgba(255, 255, 255, 0.95); padding: 12px 16px; border-radius: 6px; border: 1px solid #d0d7de; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+        .scrollable { overflow-y: auto; scrollbar-width: thin; scrollbar-color: #d0d7de #f6f8fa; }
+        .scrollable::-webkit-scrollbar { width: 10px; }
+        .scrollable::-webkit-scrollbar-track { background: #f6f8fa; }
+        .scrollable::-webkit-scrollbar-thumb { background: #d0d7de; border-radius: 5px; }
+        .scrollable::-webkit-scrollbar-thumb:hover { background: #afb8c1; }
+        .skeleton { background: linear-gradient(90deg, #f6f8fa 25%, #eaeef2 50%, #f6f8fa 75%); background-size: 200% 100%; animation: loading 1.5s infinite; border-radius: 6px; height: 20px; }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .skeleton.h-12 { height: 48px; }
+        .skeleton.h-8 { height: 32px; }
+        .skeleton.w-75 { width: 75%; }
+        .skeleton.w-25 { width: 25%; }
+        .load-more { width: 100%; padding: 12px; background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; cursor: pointer; text-align: center; transition: all 0.15s; margin-top: 8px; }
+        .load-more:hover { background: #f3f4f6; }
+        .season-header { background: #f6f8fa; padding: 12px; border-radius: 6px; margin-bottom: 8px; font-weight: 600; }
+        .episode-item { background: white; border-radius: 6px; padding: 16px; margin-bottom: 8px; border: 1px solid #d0d7de; cursor: pointer; transition: all 0.15s; }
+        .episode-item:hover { background: #f6f8fa; border-color: #0969da; }
+        .episode-item.focused { border-color: #0969da; box-shadow: 0 0 0 2px #0969da; }
+        .close-btn { background: none; border: none; font-size: 32px; color: #57606a; cursor: pointer; padding: 0; line-height: 1; }
+        .close-btn:hover { color: #24292f; }
+        .code-box { background: #f6f8fa; padding: 16px; border-radius: 6px; border: 1px solid #d0d7de; word-break: break-all; }
+        .code-text { font-size: 14px; color: #0969da; font-family: monospace; }
+        .hidden { display: none; }
+        .flex-1 { flex: 1; }
+        .overflow-hidden { overflow: hidden; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .result-count { font-size: 14px; color: #57606a; padding: 8px 16px; background: #f6f8fa; border-radius: 6px; margin-bottom: 8px; }
+        .panel-item { padding: 10px 12px; border-radius: 6px; cursor: pointer; margin-bottom: 4px; border: 1px solid transparent; transition: all 0.15s; }
+        .panel-item:hover { background: #f6f8fa; border-color: #d0d7de; }
+        .panel-item.active { background: #ddf4ff; border-color: #0969da; font-weight: 600; }
+        .panel-item.focused { border-color: #0969da; box-shadow: 0 0 0 2px #0969da; }
+        .panel-list-container { height: 100%; overflow-y: auto; }
+        @media (min-width: 1024px) { .container { flex-direction: row; } .sidebar { width: 384px; } }
+        @media (max-width: 768px) { .header-content { flex-direction: column; } .tabs { flex-wrap: wrap; } .flex { flex-direction: column; } .panel-list { border-right: none !important; padding-right: 0 !important; } .panel-form { padding-left: 0 !important; } }
+    </style>
+</head>
+<body>
+    <div id="notifications"></div>
+
+    <!-- Giriş / Panel Yönetim Modalı -->
+    <div id="loginModal" class="modal active">
+        <div class="modal-content modal-content-large">
+            <div class="text-center mb-4">
+                <h1>ÖZKAN IPTV PLAYER</h1>
+                <p class="text-small">LG Smart TV / Chrome 34 uyumlu</p>
+            </div>
+            <div class="flex" style="gap: 20px; height: 400px;">
+                <div class="panel-list" style="flex: 1; overflow-y: auto; border-right: 1px solid #d0d7de; padding-right: 16px;">
+                    <h3>Kayıtlı Paneller</h3>
+                    <div id="panelListContainer" class="panel-list-container"></div>
+                    <button type="button" id="newPanelBtn" class="btn btn-primary" style="margin-top: 12px; width: 100%;">+ Yeni Panel Ekle</button>
+                </div>
+                <div class="panel-form" style="flex: 1.5; padding-left: 16px;">
+                    <h3>Panel Bilgileri</h3>
+                    <form id="panelForm">
+                        <div class="form-group">
+                            <label>Panel Adı (isteğe bağlı)</label>
+                            <input type="text" id="panelName" placeholder="Örn: Ev, İş, vs.">
+                        </div>
+                        <div class="form-group">
+                            <label>Sunucu Adresi</label>
+                            <input type="text" id="panelServerUrl" placeholder="http://example.com:8080" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Kullanıcı Adı</label>
+                            <input type="text" id="panelUsername" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Şifre</label>
+                            <input type="password" id="panelPassword" required>
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="button" id="connectBtn" class="btn btn-success flex-1">Bağlan</button>
+                            <button type="button" id="savePanelBtn" class="btn btn-primary flex-1">Kaydet</button>
+                            <button type="button" id="deletePanelBtn" class="btn btn-danger flex-1" disabled>Sil</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Şifre Modalı (Paylaşımlı bağlantı için) -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <h2>🔐 Şifre Girin</h2>
+            <form id="passwordForm">
+                <div class="form-group">
+                    <input type="password" id="decryptPassword" placeholder="Şifre çözme parolasını girin" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">Şifre Çöz</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Ana Uygulama -->
+    <div id="mainApp" class="hidden">
+        <header>
+            <div class="header-content">
+                <div>
+                    <h1>ÖZKAN IPTV PLAYER</h1>
+                    <p class="text-small">Hızlı Akış</p>
+                </div>
+                <div class="header-buttons">
+                    <span id="userInfo" class="badge"></span>
+                    <span id="expiryInfo" class="badge badge-primary"></span>
+                    <button type="button" id="shareBtn" class="btn btn-primary">Paylaş</button>
+                    <button type="button" id="favBtn" class="btn btn-success">Favoriler <span id="favCount" class="badge-success">0</span></button>
+                    <button type="button" id="logoutBtn" class="btn btn-danger">Çıkış Yap</button>
+                </div>
+            </div>
+        </header>
+
+        <nav>
+            <div class="tabs">
+                <button type="button" data-type="live" class="tab active">📺 Canlı TV</button>
+                <button type="button" data-type="movies" class="tab inactive">🎬 Filmler</button>
+                <button type="button" data-type="series" class="tab inactive">📺 Diziler</button>
+            </div>
+        </nav>
+
+        <div class="container">
+            <aside class="sidebar">
+                <div class="sidebar-section">
+                    <input type="search" id="searchInput" placeholder="🔍 Tüm kanallarda ara...">
+                </div>
+                <div class="sidebar-section">
+                    <select id="categorySelect">
+                        <option value="all">Tüm Kategoriler</option>
+                    </select>
+                </div>
+                <div id="resultCount" class="result-count hidden"></div>
+                <div id="channelsList" class="channels-list scrollable"></div>
+            </aside>
+
+            <main class="player-container">
+                <div id="placeholder" class="placeholder">
+                    <div class="placeholder-icon">📺</div>
+                    <p>Bir kanal seçin</p>
+                </div>
+                <video id="player" controls class="hidden"></video>
+                <div id="videoInfo" class="video-info hidden">
+                    <h3 id="channelName"></h3>
+                    <p class="text-small" id="channelCat"></p>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Bölümler Modalı -->
+    <div id="episodesModal" class="modal">
+        <div class="modal-content modal-content-large">
+            <div class="modal-header">
+                <h2 id="seriesTitle"></h2>
+                <button type="button" id="closeEpisodes" class="close-btn">&times;</button>
+            </div>
+            <div id="episodesList" class="flex-1 scrollable"></div>
+        </div>
+    </div>
+
+    <!-- Paylaşım Modalı -->
+    <div id="shareModal" class="modal">
+        <div class="modal-content">
+            <h2>🔗 Yapılandırmayı Paylaş</h2>
+            <div id="shareStep1">
+                <p class="text-small mb-4">Yapılandırmanızı şifrelemek için bir parola belirleyin</p>
+                <div class="form-group">
+                    <input type="password" id="sharePassword" placeholder="Parola girin (en az 4 karakter)">
+                </div>
+                <button type="button" id="generateBtn" class="btn btn-primary btn-full">URL Oluştur</button>
+            </div>
+            <div id="shareStep2" class="hidden">
+                <div class="code-box mb-4">
+                    <code id="shareUrl" class="code-text"></code>
+                </div>
+                <p class="text-small mb-4">Parola: <strong id="sharePass"></strong></p>
+                <div class="flex gap-3 mb-4">
+                    <button type="button" id="copyBtn" class="btn btn-success flex-1">URL'yi Kopyala</button>
+                    <button type="button" id="testBtn" class="btn btn-primary flex-1">URL'yi Test Et</button>
+                </div>
+                <button type="button" id="backBtn" class="btn btn-secondary btn-full">Yeni URL Oluştur</button>
+            </div>
+            <div class="mt-4 flex justify-end">
+                <button type="button" id="closeShare" class="btn btn-secondary">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Favoriler Modalı -->
+    <div id="favModal" class="modal">
+        <div class="modal-content modal-content-large">
+            <h2 class="mb-4">⭐ Favoriler</h2>
+            <div id="favList" class="flex-1 scrollable"></div>
+            <div class="mt-4 flex justify-end">
+                <button type="button" id="closeFav" class="btn btn-secondary">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ------------------------------------------------
+        // ES5 Uyumlu, LG Kumanda Desteği, HLS.js v0.14.17
+        // ------------------------------------------------
+
+        var app = {};
+
+        // ----- Yardımcı fonksiyonlar (ES5) -----
+        function httpRequest(method, url, callback, errback) {
+            var xhr = new XMLHttpRequest();
+            xhr.open(method, url, true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        callback(xhr.responseText);
+                    } else {
+                        if (errback) errback(xhr.statusText);
+                        else console.error('HTTP Error:', xhr.statusText);
+                    }
+                }
+            };
+            xhr.onerror = function() {
+                if (errback) errback('Network Error');
+                else console.error('Network Error');
+            };
+            xhr.send();
+        }
+
+        function httpRequestJson(method, url, callback, errback) {
+            httpRequest(method, url, function(text) {
+                try {
+                    var data = JSON.parse(text);
+                    callback(data);
+                } catch (e) {
+                    if (errback) errback('JSON Parse Error: ' + e.message);
+                    else console.error('JSON Parse Error:', e);
+                }
+            }, errback);
+        }
+
+        // Basit şifreleme (sadece base64 + _pass kontrolü)
+        function encryptData(text, password) {
+            // _pass ekleyerek base64 encode
+            var obj = {
+                _pass: btoa(password),
+                data: btoa(text)
+            };
+            return btoa(JSON.stringify(obj));
+        }
+
+        function decryptData(encryptedBase64, password) {
+            var json = JSON.parse(atob(encryptedBase64));
+            if (json._pass && atob(json._pass) === password) {
+                return atob(json.data);
+            } else {
+                throw new Error('Yanlış şifre');
+            }
+        }
+
+        // ----- app nesnesi -----
+        app.state = {
+            creds: null,
+            userInfo: null,
+            type: 'live',
+            allChannels: [],
+            channels: [],
+            displayed: [],
+            categories: [],
+            favorites: [],
+            category: 'all',
+            search: '',
+            cache: {},
+            catCache: {},
+            page: 0,
+            pageSize: 50,
+            hls: null,
+            panels: [],
+            selectedPanelId: null,
+            pendingConfig: null
+        };
+
+        app.init = function() {
+            this.loadFavorites();
+            this.loadPanels();
+            this.cleanPanels();
+            this.checkUrl();
+            this.bindEvents();
+            this.renderPanelList();
+            // LG kumanda olaylarını bağla
+            this.bindRemoteKeys();
+        };
+
+        app.bindRemoteKeys = function() {
+            var self = this;
+            document.addEventListener('keydown', function(e) {
+                var key = e.keyCode || e.which;
+                // Geri tuşu (Escape veya Backspace)
+                if (key === 27 || key === 8) {
+                    // Aktif modal varsa kapat
+                    var activeModal = document.querySelector('.modal.active');
+                    if (activeModal) {
+                        var id = activeModal.id;
+                        if (id === 'loginModal') {
+                            // login modal kapatılamaz
+                            return;
+                        }
+                        self.closeModal(id);
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return;
+                    }
+                }
+                // Yön tuşları: kanal listesinde gezinme
+                var list = document.getElementById('channelsList');
+                var focused = list ? list.querySelector('.channel-item.focused') : null;
+                if (key === 40) { // Aşağı
+                    e.preventDefault();
+                    if (focused) {
+                        var next = focused.nextElementSibling;
+                        while (next && !next.classList.contains('channel-item')) next = next.nextElementSibling;
+                        if (next) {
+                            focused.classList.remove('focused');
+                            next.classList.add('focused');
+                            next.scrollIntoView({ block: 'nearest' });
+                        }
+                    } else {
+                        var first = list ? list.querySelector('.channel-item') : null;
+                        if (first) first.classList.add('focused');
+                    }
+                } else if (key === 38) { // Yukarı
+                    e.preventDefault();
+                    if (focused) {
+                        var prev = focused.previousElementSibling;
+                        while (prev && !prev.classList.contains('channel-item')) prev = prev.previousElementSibling;
+                        if (prev) {
+                            focused.classList.remove('focused');
+                            prev.classList.add('focused');
+                            prev.scrollIntoView({ block: 'nearest' });
+                        }
+                    } else {
+                        var last = list ? list.querySelector('.channel-item:last-child') : null;
+                        if (last) last.classList.add('focused');
+                    }
+                } else if (key === 13) { // Enter
+                    e.preventDefault();
+                    if (focused) {
+                        focused.click();
+                    } else {
+                        // Belki odaklanmış buton varsa tıkla
+                        var activeEl = document.activeElement;
+                        if (activeEl && activeEl.click) activeEl.click();
+                    }
+                }
+            });
+        };
+
+        // ----- Diğer metotlar (ES5) -----
+        app.bindEvents = function() {
+            var self = this;
+            // Panel yönetimi
+            document.getElementById('newPanelBtn').addEventListener('click', function() { self.newPanel(); });
+            document.getElementById('connectBtn').addEventListener('click', function() { self.connectPanel(); });
+            document.getElementById('savePanelBtn').addEventListener('click', function() { self.savePanel(); });
+            document.getElementById('deletePanelBtn').addEventListener('click', function() { self.deletePanel(); });
+
+            document.getElementById('passwordForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                self.decrypt(e);
+            });
+
+            document.getElementById('logoutBtn').addEventListener('click', function() { self.logout(); });
+
+            document.getElementById('shareBtn').addEventListener('click', function() { self.showShare(); });
+            document.getElementById('generateBtn').addEventListener('click', function() { self.generateUrl(); });
+            document.getElementById('closeShare').addEventListener('click', function() { self.closeModal('shareModal'); });
+            document.getElementById('copyBtn').addEventListener('click', function() { self.copyUrl(); });
+            document.getElementById('testBtn').addEventListener('click', function() { self.testUrl(); });
+            document.getElementById('backBtn').addEventListener('click', function() { self.resetShare(); });
+
+            document.getElementById('favBtn').addEventListener('click', function() { self.showFavorites(); });
+            document.getElementById('closeFav').addEventListener('click', function() { self.closeModal('favModal'); });
+
+            document.getElementById('closeEpisodes').addEventListener('click', function() { self.closeModal('episodesModal'); });
+
+            document.getElementById('searchInput').addEventListener('input', function(e) {
+                self.handleSearch(e.target.value);
+            });
+            document.getElementById('categorySelect').addEventListener('change', function(e) {
+                self.changeCategory(e.target.value);
+            });
+
+            document.querySelectorAll('.tab').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    self.switchType(btn.dataset.type);
+                });
+            });
+
+            document.getElementById('channelsList').addEventListener('scroll', function() {
+                self.handleScroll();
+            });
+        };
+
+        app.cleanPanels = function() {
+            var changed = false;
+            var panels = [];
+            for (var i = 0; i < this.state.panels.length; i++) {
+                var p = this.state.panels[i];
+                var url = (p.serverUrl || '').toLowerCase();
+                var name = (p.name || '').toLowerCase();
+                if (url.indexOf('amazingiptv1.one') === -1 && name !== 'tekno' && name !== 'tt') {
+                    panels.push(p);
+                } else {
+                    changed = true;
+                }
+            }
+            if (changed) {
+                this.state.panels = panels;
+                this.savePanels();
+                this.notify('🔧 İstenmeyen paneller temizlendi.', 'info');
+            }
+        };
+
+        app.loadPanels = function() {
+            try {
+                var data = localStorage.getItem('iptv_panels');
+                this.state.panels = data ? JSON.parse(data) : [];
+                if (!Array.isArray(this.state.panels)) this.state.panels = [];
+            } catch (e) {
+                console.warn('Panel verileri okunamadı, sıfırlanıyor.', e);
+                this.state.panels = [];
+                localStorage.removeItem('iptv_panels');
+            }
+        };
+
+        app.savePanels = function() {
+            try {
+                localStorage.setItem('iptv_panels', JSON.stringify(this.state.panels));
+            } catch (e) {
+                console.error('Paneller kaydedilemedi:', e);
+                this.notify('❌ Paneller kaydedilemedi.', 'error');
+            }
+        };
+
+        app.renderPanelList = function() {
+            var container = document.getElementById('panelListContainer');
+            if (!container) return;
+            var self = this;
+            if (this.state.panels.length === 0) {
+                container.innerHTML = '<div class="text-small" style="padding: 12px; color: #57606a;">Henüz panel eklenmemiş.</div>';
+                return;
+            }
+            var html = '';
+            for (var i = 0; i < this.state.panels.length; i++) {
+                var p = this.state.panels[i];
+                var active = (p.id === this.state.selectedPanelId) ? 'active' : '';
+                var name = p.name || p.serverUrl.replace(/^https?:\/\//, '');
+                html += '<div class="panel-item ' + active + '" data-id="' + p.id + '">' + this.escape(name) + '</div>';
+            }
+            container.innerHTML = html;
+
+            container.querySelectorAll('.panel-item').forEach(function(el) {
+                el.addEventListener('click', function() {
+                    self.selectPanel(el.dataset.id);
+                });
+            });
+        };
+
+        app.selectPanel = function(id) {
+            this.state.selectedPanelId = id;
+            var panel = null;
+            for (var i = 0; i < this.state.panels.length; i++) {
+                if (this.state.panels[i].id === id) {
+                    panel = this.state.panels[i];
+                    break;
+                }
+            }
+            if (panel) {
+                document.getElementById('panelName').value = panel.name || '';
+                document.getElementById('panelServerUrl').value = panel.serverUrl;
+                document.getElementById('panelUsername').value = panel.username;
+                document.getElementById('panelPassword').value = panel.password;
+                document.getElementById('savePanelBtn').textContent = 'Güncelle';
+                document.getElementById('deletePanelBtn').disabled = false;
+            } else {
+                this.newPanel();
+                this.notify('⚠️ Panel bulunamadı, yeni panel oluşturabilirsiniz.', 'warning');
+            }
+            this.renderPanelList();
+        };
+
+        app.newPanel = function() {
+            this.state.selectedPanelId = null;
+            document.getElementById('panelName').value = '';
+            document.getElementById('panelServerUrl').value = '';
+            document.getElementById('panelUsername').value = '';
+            document.getElementById('panelPassword').value = '';
+            document.getElementById('savePanelBtn').textContent = 'Ekle';
+            document.getElementById('deletePanelBtn').disabled = true;
+            this.renderPanelList();
+        };
+
+        app.savePanel = function() {
+            var name = document.getElementById('panelName').value.trim();
+            var serverUrl = document.getElementById('panelServerUrl').value.trim();
+            var username = document.getElementById('panelUsername').value.trim();
+            var password = document.getElementById('panelPassword').value.trim();
+
+            if (!serverUrl || !username || !password) {
+                this.notify('⚠️ Lütfen tüm zorunlu alanları doldurun.', 'warning');
+                return;
+            }
+
+            try {
+                if (this.state.selectedPanelId) {
+                    var panel = null;
+                    for (var i = 0; i < this.state.panels.length; i++) {
+                        if (this.state.panels[i].id === this.state.selectedPanelId) {
+                            panel = this.state.panels[i];
+                            break;
+                        }
+                    }
+                    if (panel) {
+                        panel.name = name;
+                        panel.serverUrl = serverUrl;
+                        panel.username = username;
+                        panel.password = password;
+                        this.savePanels();
+                        this.notify('✅ Panel güncellendi.', 'success');
+                    } else {
+                        this.notify('⚠️ Güncellenecek panel bulunamadı.', 'error');
+                        return;
+                    }
+                } else {
+                    var newPanel = {
+                        id: Date.now() + '-' + Math.random().toString(36).substr(2, 6),
+                        name: name,
+                        serverUrl: serverUrl,
+                        username: username,
+                        password: password
+                    };
+                    this.state.panels.push(newPanel);
+                    this.savePanels();
+                    this.state.selectedPanelId = newPanel.id;
+                    this.notify('✅ Yeni panel eklendi.', 'success');
+                }
+                this.renderPanelList();
+                var current = null;
+                for (var j = 0; j < this.state.panels.length; j++) {
+                    if (this.state.panels[j].id === this.state.selectedPanelId) {
+                        current = this.state.panels[j];
+                        break;
+                    }
+                }
+                if (current) {
+                    document.getElementById('panelName').value = current.name || '';
+                    document.getElementById('panelServerUrl').value = current.serverUrl;
+                    document.getElementById('panelUsername').value = current.username;
+                    document.getElementById('panelPassword').value = current.password;
+                    document.getElementById('savePanelBtn').textContent = 'Güncelle';
+                    document.getElementById('deletePanelBtn').disabled = false;
+                }
+            } catch (e) {
+                console.error('Panel kaydedilirken hata:', e);
+                this.notify('❌ Panel kaydedilemedi: ' + e.message, 'error');
+            }
+        };
+
+        app.deletePanel = function() {
+            if (!this.state.selectedPanelId) {
+                this.notify('⚠️ Silmek için bir panel seçin.', 'warning');
+                return;
+            }
+            if (!confirm('Bu paneli silmek istediğinize emin misiniz?')) return;
+            try {
+                var newPanels = [];
+                for (var i = 0; i < this.state.panels.length; i++) {
+                    if (this.state.panels[i].id !== this.state.selectedPanelId) {
+                        newPanels.push(this.state.panels[i]);
+                    }
+                }
+                this.state.panels = newPanels;
+                this.savePanels();
+                this.state.selectedPanelId = null;
+                this.newPanel();
+                this.renderPanelList();
+                this.notify('🗑️ Panel silindi.', 'info');
+            } catch (e) {
+                console.error('Panel silinirken hata:', e);
+                this.notify('❌ Panel silinemedi.', 'error');
+            }
+        };
+
+        app.connectPanel = function() {
+            var serverUrl = document.getElementById('panelServerUrl').value.trim();
+            var username = document.getElementById('panelUsername').value.trim();
+            var password = document.getElementById('panelPassword').value.trim();
+            if (!serverUrl || !username || !password) {
+                this.notify('⚠️ Lütfen tüm alanları doldurun.', 'warning');
+                return;
+            }
+            this.doLogin({ serverUrl: serverUrl, username: username, password: password });
+        };
+
+        // ----- Giriş İşlemleri -----
+        app.doLogin = function(creds) {
+            var self = this;
+            this.state.creds = creds;
+            try {
+                this.notify('🔄 IPTV sunucusuna bağlanılıyor...', 'info');
+                var url = this.buildUrl('player_api.php');
+                httpRequestJson('GET', url, function(data) {
+                    if (data.user_info && data.user_info.auth === 1) {
+                        self.state.userInfo = data.user_info;
+                        self.loadApp();
+                        self.notify('✅ Bağlantı başarılı!', 'success');
+                        self.closeModal('loginModal');
+                    } else {
+                        throw new Error('Geçersiz kimlik bilgileri');
+                    }
+                }, function(err) {
+                    self.notify('❌ Bağlantı başarısız! Kimlik bilgilerinizi kontrol edin.', 'error');
+                    self.state.creds = null;
+                    self.state.userInfo = null;
+                });
+            } catch (error) {
+                this.notify('❌ Bağlantı başarısız! ' + error.message, 'error');
+                this.state.creds = null;
+                this.state.userInfo = null;
+            }
+        };
+
+        app.checkUrl = function() {
+            var params = new URLSearchParams(location.search);
+            var config = params.get('config');
+            if (config) {
+                this.state.pendingConfig = decodeURIComponent(config);
+                this.closeModal('loginModal');
+                document.getElementById('passwordModal').classList.add('active');
+            }
+        };
+
+        app.decrypt = function(e) {
+            e.preventDefault();
+            var self = this;
+            var password = document.getElementById('decryptPassword').value;
+            try {
+                this.notify('🔓 Yapılandırma şifresi çözülüyor...', 'info');
+                var config = null;
+                try {
+                    var decoded = JSON.parse(atob(this.state.pendingConfig));
+                    if (decoded._pass) {
+                        if (atob(decoded._pass) === password) {
+                            delete decoded._pass;
+                            config = decoded;
+                        } else {
+                            throw new Error('Yanlış şifre');
+                        }
+                    } else {
+                        var decrypted = decryptData(this.state.pendingConfig, password);
+                        config = JSON.parse(decrypted);
+                    }
+                } catch (err) {
+                    var decrypted2 = decryptData(this.state.pendingConfig, password);
+                    config = JSON.parse(decrypted2);
+                }
+
+                this.state.creds = config.credentials;
+                this.state.favorites = config.favorites || [];
+                this.saveFavorites();
+
+                // Kullanıcı bilgilerini al
+                var url = this.buildUrl('player_api.php');
+                httpRequestJson('GET', url, function(data) {
+                    if (data.user_info && data.user_info.auth === 1) {
+                        self.state.userInfo = data.user_info;
+                    }
+                    self.closeModal('passwordModal');
+                    self.loadApp();
+                    self.notify('✅ Yapılandırma başarıyla yüklendi!', 'success');
+                    try {
+                        if (location.protocol !== 'file:') {
+                            history.replaceState({}, '', location.pathname);
+                        }
+                    } catch (err) {}
+                }, function(err) {
+                    self.closeModal('passwordModal');
+                    self.loadApp();
+                    self.notify('✅ Yapılandırma yüklendi (kullanıcı bilgisi alınamadı)', 'info');
+                });
+
+            } catch (error) {
+                console.error('Şifre çözme hatası:', error);
+                this.notify('❌ Yanlış şifre! Lütfen tekrar deneyin.', 'error');
+                document.getElementById('decryptPassword').value = '';
+            }
+        };
+
+        // ----- Uygulama Yükleme -----
+        app.loadApp = function() {
+            this.closeModal('loginModal');
+            document.getElementById('mainApp').classList.remove('hidden');
+            document.getElementById('userInfo').textContent = '👤 ' + this.state.creds.username;
+            this.displayExpiry();
+            this.updateFavCount();
+            this.loadCategories();
+            this.loadChannels();
+        };
+
+        app.displayExpiry = function() {
+            var expiryEl = document.getElementById('expiryInfo');
+            if (!this.state.userInfo || !this.state.userInfo.exp_date) {
+                expiryEl.classList.add('hidden');
+                return;
+            }
+            var expTimestamp = parseInt(this.state.userInfo.exp_date);
+            if (!expTimestamp || expTimestamp === 0) {
+                expiryEl.textContent = '📅 Süresiz';
+                expiryEl.classList.remove('hidden');
+                return;
+            }
+            var expDate = new Date(expTimestamp * 1000);
+            var now = new Date();
+            var daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
+            var day = expDate.getDate();
+            var month = expDate.toLocaleDateString('tr-TR', { month: 'short' });
+            var year = expDate.getFullYear();
+            var dateStr = day + ' ' + month + ' ' + year;
+            if (daysLeft < 0) {
+                expiryEl.textContent = '📅 Süresi doldu';
+                expiryEl.className = 'badge badge-danger';
+            } else if (daysLeft <= 7) {
+                expiryEl.textContent = '📅 ' + daysLeft + ' gün sonra sona eriyor (' + dateStr + ')';
+                expiryEl.className = 'badge badge-warning';
+            } else {
+                expiryEl.textContent = '📅 Geçerlilik tarihi ' + dateStr;
+                expiryEl.className = 'badge badge-primary';
+            }
+            expiryEl.classList.remove('hidden');
+        };
+
+        // ----- Kategori ve Kanal İşlemleri -----
+        app.loadCategories = function() {
+            var self = this;
+            var key = this.state.type;
+            if (this.state.catCache[key]) {
+                this.state.categories = this.state.catCache[key];
+                this.renderCategories();
+                return;
+            }
+            var actions = { live: 'get_live_categories', movies: 'get_vod_categories', series: 'get_series_categories' };
+            try {
+                this.notify('📂 Kategoriler yükleniyor...', 'info');
+                var url = this.buildUrl('player_api.php', 'action=' + actions[this.state.type]);
+                httpRequestJson('GET', url, function(data) {
+                    self.state.categories = Array.isArray(data) ? data : [];
+                    self.state.catCache[key] = self.state.categories;
+                    self.renderCategories();
+                }, function(err) {
+                    self.state.categories = [];
+                    self.notify('⚠️ Kategoriler yüklenemedi', 'warning');
+                });
+            } catch (error) {
+                this.state.categories = [];
+                this.notify('⚠️ Kategoriler yüklenemedi', 'warning');
+            }
+        };
+
+        app.loadChannels = function() {
+            var self = this;
+            var key = this.state.type + '_' + this.state.category;
+            if (this.state.cache[key]) {
+                this.state.allChannels = this.state.cache[key];
+                this.state.channels = this.state.allChannels.slice(0);
+                this.resetPage();
+                this.renderCategories();
+                this.renderChannels();
+                return;
+            }
+            var actions = { live: 'get_live_streams', movies: 'get_vod_streams', series: 'get_series' };
+            try {
+                this.showSkeleton();
+                this.notify('📺 Kanallar yükleniyor...', 'info');
+                var params = 'action=' + actions[this.state.type];
+                if (this.state.category !== 'all') params += '&category_id=' + this.state.category;
+                var url = this.buildUrl('player_api.php', params);
+                httpRequestJson('GET', url, function(data) {
+                    self.state.allChannels = Array.isArray(data) ? data : [];
+                    self.state.channels = self.state.allChannels.slice(0);
+                    self.state.cache[key] = self.state.allChannels;
+                    self.resetPage();
+                    self.renderCategories();
+                    self.renderChannels();
+                    self.notify('✅ ' + self.state.allChannels.length + ' kanal yüklendi', 'success');
+                }, function(err) {
+                    document.getElementById('channelsList').innerHTML = '<div class="text-center text-small">Kanallar yüklenemedi</div>';
+                    self.notify('❌ Kanallar yüklenemedi', 'error');
+                });
+            } catch (error) {
+                document.getElementById('channelsList').innerHTML = '<div class="text-center text-small">Kanallar yüklenemedi</div>';
+                this.notify('❌ Kanallar yüklenemedi', 'error');
+            }
+        };
+
+        app.renderCategories = function() {
+            var select = document.getElementById('categorySelect');
+            var html = '<option value="all">Tüm Kategoriler (' + this.state.allChannels.length + ')</option>';
+            for (var i = 0; i < this.state.categories.length; i++) {
+                var c = this.state.categories[i];
+                html += '<option value="' + c.category_id + '">' + this.escape(c.category_name) + '</option>';
+            }
+            select.innerHTML = html;
+            select.value = this.state.category;
+        };
+
+        app.resetPage = function() {
+            this.state.page = 0;
+            this.state.displayed = [];
+        };
+
+        app.renderChannels = function() {
+            var self = this;
+            var start = this.state.page * this.state.pageSize;
+            var end = start + this.state.pageSize;
+            var page = this.state.channels.slice(start, end);
+
+            if (this.state.page === 0) this.state.displayed = [];
+            this.state.displayed = this.state.displayed.concat(page);
+
+            var container = document.getElementById('channelsList');
+            var resultEl = document.getElementById('resultCount');
+
+            if (this.state.displayed.length === 0) {
+                container.innerHTML = '<div class="text-center text-small">Kanal bulunamadı</div>';
+                resultEl.classList.add('hidden');
+                return;
+            }
+
+            if (this.state.search) {
+                resultEl.textContent = '"' + this.state.search + '" için ' + this.state.channels.length + ' kanal bulundu';
+                resultEl.classList.remove('hidden');
+            } else {
+                resultEl.classList.add('hidden');
+            }
+
+            var html = '';
+            for (var i = 0; i < this.state.displayed.length; i++) {
+                var ch = this.state.displayed[i];
+                var name = this.escape(ch.name || ch.title || 'Bilinmiyor');
+                var isFav = (this.state.favorites.indexOf(this.getId(ch)) !== -1);
+                var streamType = ch.stream_type || '';
+                if (streamType.toLowerCase() === 'live') streamType = 'Canlı';
+                var chJson = JSON.stringify(ch).replace(/'/g, '&apos;');
+                html += '<div class="channel-item" data-channel=\'' + chJson + '\'>' +
+                    '<div class="channel-header">' +
+                    '<div class="channel-info">' +
+                    '<div class="channel-name">' + name + '</div>' +
+                    (streamType ? '<span class="badge">' + streamType + '</span>' : '') +
+                    '</div>' +
+                    '<button class="fav-btn ' + (isFav ? 'active' : 'inactive') + '" data-id="' + this.getId(ch) + '">' +
+                    (isFav ? '★' : '☆') +
+                    '</button>' +
+                    '</div>' +
+                    '</div>';
+            }
+
+            var hasMore = this.state.displayed.length < this.state.channels.length;
+            if (hasMore) {
+                html += '<button class="load-more">Daha Fazla Yükle (' + (this.state.channels.length - this.state.displayed.length) + ' kaldı)</button>';
+            }
+
+            container.innerHTML = html;
+
+            container.querySelectorAll('.channel-item').forEach(function(item) {
+                item.addEventListener('click', function() {
+                    var ch = JSON.parse(item.dataset.channel);
+                    if (self.state.type === 'series') {
+                        self.showEpisodes(ch);
+                    } else {
+                        self.play(ch);
+                    }
+                });
+            });
+
+            container.querySelectorAll('.fav-btn').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    self.toggleFav(btn.dataset.id);
+                });
+            });
+
+            if (hasMore) {
+                container.querySelector('.load-more').addEventListener('click', function() {
+                    self.state.page++;
+                    self.renderChannels();
+                });
+            }
+        };
+
+        app.handleScroll = function() {
+            var el = document.getElementById('channelsList');
+            if ((el.scrollTop + el.clientHeight) / el.scrollHeight > 0.8) {
+                var btn = el.querySelector('.load-more');
+                if (btn) btn.click();
+            }
+        };
+
+        app.showSkeleton = function() {
+            var html = '';
+            for (var i = 0; i < 5; i++) {
+                html += '<div class="channel-item">' +
+                    '<div class="skeleton h-8 w-75 mb-2"></div>' +
+                    '<div class="skeleton h-8 w-25"></div>' +
+                    '</div>';
+            }
+            document.getElementById('channelsList').innerHTML = html;
+        };
+
+        // ----- Bölümler, Oynatma, Favoriler -----
+        app.showEpisodes = function(series) {
+            var self = this;
+            try {
+                this.notify('📺 Bölümler yükleniyor...', 'info');
+                var url = this.buildUrl('player_api.php', 'action=get_series_info&series_id=' + series.series_id);
+                httpRequestJson('GET', url, function(data) {
+                    document.getElementById('seriesTitle').textContent = series.name || series.title;
+                    var list = document.getElementById('episodesList');
+                    if (!data.episodes || Object.keys(data.episodes).length === 0) {
+                        list.innerHTML = '<div class="text-center text-small">Bölüm bulunmuyor</div>';
+                    } else {
+                        var seasons = Object.keys(data.episodes).sort(function(a, b) { return a - b; });
+                        var html = '';
+                        for (var s = 0; s < seasons.length; s++) {
+                            var seasonNum = seasons[s];
+                            var eps = data.episodes[seasonNum];
+                            html += '<div class="season-header">Sezon ' + seasonNum + '</div>';
+                            for (var e = 0; e < eps.length; e++) {
+                                var ep = eps[e];
+                                var epJson = JSON.stringify(ep).replace(/'/g, '&apos;');
+                                var seriesJson = JSON.stringify(series).replace(/'/g, '&apos;');
+                                html += '<div class="episode-item" data-ep=\'' + epJson + '\' data-series=\'' + seriesJson + '\'>' +
+                                    '<h3>Bölüm ' + ep.episode_num + ': ' + self.escape(ep.title || 'Başlıksız') + '</h3>' +
+                                    '</div>';
+                            }
+                        }
+                        list.innerHTML = html;
+
+                        list.querySelectorAll('.episode-item').forEach(function(item) {
+                            item.addEventListener('click', function() {
+                                var ep = JSON.parse(item.dataset.ep);
+                                var ser = JSON.parse(item.dataset.series);
+                                self.playEpisode(ep, ser);
+                                self.closeModal('episodesModal');
+                            });
+                        });
+                        self.notify('✅ ' + Object.keys(data.episodes).length + ' sezon yüklendi', 'success');
+                    }
+                    document.getElementById('episodesModal').classList.add('active');
+                }, function(err) {
+                    self.notify('❌ Bölümler yüklenemedi', 'error');
+                });
+            } catch (error) {
+                this.notify('❌ Bölümler yüklenemedi', 'error');
+            }
+        };
+
+        app.playEpisode = function(ep, series) {
+            var serverUrl = this.state.creds.serverUrl;
+            var username = this.state.creds.username;
+            var password = this.state.creds.password;
+            var ext = ep.container_extension || 'mp4';
+            var url = serverUrl + '/series/' + username + '/' + password + '/' + ep.id + '.' + ext;
+            this.playStream(url, series.name + ' - S' + ep.season + 'E' + ep.episode_num, series.category_id);
+        };
+
+        app.play = function(ch) {
+            var serverUrl = this.state.creds.serverUrl;
+            var username = this.state.creds.username;
+            var password = this.state.creds.password;
+            var type = this.state.type;
+            var url = '';
+            if (type === 'live') {
+                url = serverUrl + '/live/' + username + '/' + password + '/' + ch.stream_id + '.m3u8';
+            } else if (type === 'movies') {
+                var ext = ch.container_extension || 'mp4';
+                url = serverUrl + '/movie/' + username + '/' + password + '/' + ch.stream_id + '.' + ext;
+            }
+            this.playStream(url, ch.name || ch.title, ch.category_id);
+        };
+
+        app.playStream = function(url, name, catId) {
+            var player = document.getElementById('player');
+            var placeholder = document.getElementById('placeholder');
+            var info = document.getElementById('videoInfo');
+
+            if (this.state.hls) {
+                this.state.hls.destroy();
+                this.state.hls = null;
+            }
+
+            player.pause();
+            player.src = '';
+            player.load();
+
+            player.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+            info.classList.remove('hidden');
+
+            document.getElementById('channelName').textContent = name;
+            document.getElementById('channelCat').textContent = this.getCatName(catId);
+
+            this.notify('📺 Oynatılıyor: ' + name, 'info');
+
+            var self = this;
+            setTimeout(function() {
+                if (url.indexOf('.m3u8') !== -1) {
+                    if (Hls && Hls.isSupported()) {
+                        self.state.hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+                        self.state.hls.loadSource(url);
+                        self.state.hls.attachMedia(player);
+                        self.state.hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                            player.play()['catch'](function() { self.notify('❌ Oynatma başarısız', 'error'); });
+                        });
+                        self.state.hls.on(Hls.Events.ERROR, function(e, data) {
+                            if (data.fatal) self.notify('❌ Akış hatası oluştu', 'error');
+                        });
+                    } else {
+                        self.notify('❌ HLS desteklenmiyor', 'error');
+                    }
+                } else {
+                    player.src = url;
+                    player.load();
+                    player.play()['catch'](function() { self.notify('❌ Oynatma başarısız', 'error'); });
+                }
+            }, 100);
+        };
+
+        app.getCatName = function(id) {
+            for (var i = 0; i < this.state.categories.length; i++) {
+                if (this.state.categories[i].category_id == id) {
+                    return this.state.categories[i].category_name;
+                }
+            }
+            return 'Bilinmiyor';
+        };
+
+        app.getId = function(ch) {
+            return String(ch.stream_id || ch.series_id || ch.num || Math.random());
+        };
+
+        app.toggleFav = function(id) {
+            var idx = this.state.favorites.indexOf(id);
+            if (idx !== -1) {
+                this.state.favorites.splice(idx, 1);
+                this.notify('⭐ Favorilerden çıkarıldı', 'info');
+            } else {
+                this.state.favorites.push(id);
+                this.notify('⭐ Favorilere eklendi', 'success');
+            }
+            this.saveFavorites();
+            this.updateFavCount();
+            this.renderChannels();
+        };
+
+        app.updateFavCount = function() {
+            document.getElementById('favCount').textContent = this.state.favorites.length;
+        };
+
+        app.saveFavorites = function() {
+            localStorage.setItem('iptv_fav', JSON.stringify(this.state.favorites));
+        };
+
+        app.loadFavorites = function() {
+            var saved = localStorage.getItem('iptv_fav');
+            if (saved) {
+                try {
+                    this.state.favorites = JSON.parse(saved);
+                    if (!Array.isArray(this.state.favorites)) this.state.favorites = [];
+                } catch (e) {
+                    this.state.favorites = [];
+                }
+            } else {
+                this.state.favorites = [];
+            }
+        };
+
+        app.showFavorites = function() {
+            var self = this;
+            var favs = [];
+            for (var i = 0; i < this.state.allChannels.length; i++) {
+                var ch = this.state.allChannels[i];
+                if (this.state.favorites.indexOf(this.getId(ch)) !== -1) {
+                    favs.push(ch);
+                }
+            }
+            var list = document.getElementById('favList');
+            if (favs.length === 0) {
+                list.innerHTML = '<div class="text-center text-small">Henüz favori yok<br><br>Eklemek için kanalları yıldızlayın</div>';
+            } else {
+                var html = '';
+                for (var j = 0; j < favs.length; j++) {
+                    var ch = favs[j];
+                    var name = this.escape(ch.name || ch.title || 'Bilinmiyor');
+                    var chJson = JSON.stringify(ch).replace(/'/g, '&apos;');
+                    html += '<div class="channel-item" data-ch=\'' + chJson + '\'>' +
+                        '<h3 class="channel-name">' + name + '</h3>' +
+                        '<span class="badge badge-success">⭐ Favori</span>' +
+                        '</div>';
+                }
+                list.innerHTML = html;
+
+                list.querySelectorAll('.channel-item').forEach(function(item) {
+                    item.addEventListener('click', function() {
+                        var ch = JSON.parse(item.dataset.ch);
+                        if (self.state.type === 'series') {
+                            self.showEpisodes(ch);
+                        } else {
+                            self.play(ch);
+                        }
+                        self.closeModal('favModal');
+                    });
+                });
+            }
+            document.getElementById('favModal').classList.add('active');
+            this.notify('⭐ ' + favs.length + ' favori kanal gösteriliyor', 'info');
+        };
+
+        // ----- Paylaşım -----
+        app.showShare = function() {
+            this.resetShare();
+            document.getElementById('shareModal').classList.add('active');
+        };
+
+        app.resetShare = function() {
+            document.getElementById('shareStep1').classList.remove('hidden');
+            document.getElementById('shareStep2').classList.add('hidden');
+            document.getElementById('sharePassword').value = '';
+        };
+
+        app.generateUrl = function() {
+            var self = this;
+            var password = document.getElementById('sharePassword').value;
+            if (!password || password.length < 4) {
+                this.notify('⚠️ Parola en az 4 karakter olmalıdır', 'warning');
+                return;
+            }
+            try {
+                this.notify('🔒 Şifreli URL oluşturuluyor...', 'info');
+
+                var baseUrl = '';
+                if (location.protocol === 'file:') {
+                    baseUrl = location.href.split('?')[0];
+                } else {
+                    baseUrl = location.origin + location.pathname;
+                }
+
+                var config = {
+                    credentials: this.state.creds,
+                    favorites: this.state.favorites
+                };
+                var encrypted = encryptData(JSON.stringify(config), password);
+                var url = baseUrl + '?config=' + encodeURIComponent(encrypted);
+
+                document.getElementById('shareUrl').textContent = url;
+                document.getElementById('sharePass').textContent = password;
+                document.getElementById('shareStep1').classList.add('hidden');
+                document.getElementById('shareStep2').classList.remove('hidden');
+                this.notify('✅ Şifreli URL başarıyla oluşturuldu!', 'success');
+            } catch (error) {
+                console.error('URL oluşturma hatası:', error);
+                this.notify('❌ URL oluşturulamadı: ' + error.message, 'error');
+            }
+        };
+
+        app.copyUrl = function() {
+            var url = document.getElementById('shareUrl').textContent;
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(url)['catch'](function() { self.fallbackCopy(url); });
+                } else {
+                    this.fallbackCopy(url);
+                }
+                this.notify('✅ URL panoya kopyalandı!', 'success');
+            } catch (error) {
+                console.error('Kopyalama hatası:', error);
+                this.notify('❌ URL kopyalanamadı. Lütfen manuel kopyalayın.', 'error');
+            }
+        };
+
+        app.fallbackCopy = function(text) {
+            var textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        };
+
+        app.testUrl = function() {
+            var url = document.getElementById('shareUrl').textContent;
+            window.open(url, '_blank');
+            this.notify('🔗 URL yeni sekmede açılıyor...', 'info');
+        };
+
+        // ----- Diğer -----
+        app.switchType = function(type) {
+            this.state.type = type;
+            this.state.category = 'all';
+            this.state.search = '';
+            document.getElementById('searchInput').value = '';
+
+            document.querySelectorAll('.tab').forEach(function(btn) {
+                if (btn.dataset.type === type) {
+                    btn.classList.remove('inactive');
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                    btn.classList.add('inactive');
+                }
+            });
+
+            this.notify('📺 ' + (type === 'live' ? 'Canlı TV' : type === 'movies' ? 'Filmler' : 'Diziler') + "'e geçiliyor...", 'info');
+            this.loadCategories();
+            this.loadChannels();
+        };
+
+        app.changeCategory = function(cat) {
+            this.state.category = cat;
+            this.notify('📂 Kategori yükleniyor...', 'info');
+            this.loadChannels();
+        };
+
+        app.handleSearch = function(query) {
+            this.state.search = query.trim();
+            if (this.state.search) {
+                var results = [];
+                for (var i = 0; i < this.state.allChannels.length; i++) {
+                    var c = this.state.allChannels[i];
+                    var name = (c.name || c.title || '').toLowerCase();
+                    if (name.indexOf(this.state.search.toLowerCase()) !== -1) {
+                        results.push(c);
+                    }
+                }
+                this.state.channels = results;
+                this.notify('🔍 ' + this.state.allChannels.length + ' kanal aranıyor...', 'info');
+            } else {
+                this.state.channels = this.state.allChannels.slice(0);
+            }
+            this.resetPage();
+            this.renderChannels();
+        };
+
+        app.buildUrl = function(endpoint, params) {
+            var creds = this.state.creds;
+            var base = 'username=' + encodeURIComponent(creds.username) + '&password=' + encodeURIComponent(creds.password);
+            var all = params ? base + '&' + params : base;
+            return creds.serverUrl + '/' + endpoint + '?' + all;
+        };
+
+        app.logout = function() {
+            this.state.creds = null;
+            this.state.userInfo = null;
+            this.state.channels = [];
+            this.state.allChannels = [];
+            this.state.categories = [];
+            this.state.cache = {};
+            if (this.state.hls) {
+                this.state.hls.destroy();
+                this.state.hls = null;
+            }
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loginModal').classList.add('active');
+            document.getElementById('player').src = '';
+            this.notify('👋 Başarıyla çıkış yapıldı', 'info');
+            this.renderPanelList();
+        };
+
+        app.closeModal = function(id) {
+            document.getElementById(id).classList.remove('active');
+        };
+
+        app.notify = function(msg, type) {
+            type = type || 'info';
+            var div = document.createElement('div');
+            div.className = 'notification ' + type;
+            div.textContent = msg;
+            document.getElementById('notifications').appendChild(div);
+            var self = this;
+            setTimeout(function() {
+                div.classList.add('hiding');
+                setTimeout(function() { div.remove(); }, 300);
+            }, 3500);
+        };
+
+        app.escape = function(str) {
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        };
+
+        // ----- Başlat -----
+        document.addEventListener('DOMContentLoaded', function() {
+            app.init();
+        });
+    </script>
+</body>
+</html>
