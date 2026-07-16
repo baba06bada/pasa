@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ÖZKAN IPTV PLAYER</title>
-    <!-- HLS.js eski sürüm (Chrome 34 uyumlu) -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js"></script>
     <style>
         /* (Stiller aynı, sadece odak yönetimi için eklentiler) */
@@ -297,9 +296,9 @@
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                     if (xhr.status >= 200 && xhr.status < 300) {
-                        callback(xhr.responseText);
+                        if (callback) callback(xhr.responseText);
                     } else {
-                        if (errback) errback(xhr.statusText);
+                        if (errback) errback(xhr.statusText || 'HTTP Error ' + xhr.status);
                         else console.error('HTTP Error:', xhr.statusText);
                     }
                 }
@@ -315,7 +314,7 @@
             httpRequest(method, url, function(text) {
                 try {
                     var data = JSON.parse(text);
-                    callback(data);
+                    if (callback) callback(data);
                 } catch (e) {
                     if (errback) errback('JSON Parse Error: ' + e.message);
                     else console.error('JSON Parse Error:', e);
@@ -325,7 +324,6 @@
 
         // Basit şifreleme (sadece base64 + _pass kontrolü)
         function encryptData(text, password) {
-            // _pass ekleyerek base64 encode
             var obj = {
                 _pass: btoa(password),
                 data: btoa(text)
@@ -340,6 +338,22 @@
             } else {
                 throw new Error('Yanlış şifre');
             }
+        }
+
+        // ----- Query string parse (URLSearchParams yedek) -----
+        function getQueryParams() {
+            var search = window.location.search.substring(1);
+            var params = {};
+            if (search) {
+                var pairs = search.split('&');
+                for (var i = 0; i < pairs.length; i++) {
+                    var pair = pairs[i].split('=');
+                    if (pair.length === 2) {
+                        params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+                    }
+                }
+            }
+            return params;
         }
 
         // ----- app nesnesi -----
@@ -371,7 +385,6 @@
             this.checkUrl();
             this.bindEvents();
             this.renderPanelList();
-            // LG kumanda olaylarını bağla
             this.bindRemoteKeys();
         };
 
@@ -379,26 +392,20 @@
             var self = this;
             document.addEventListener('keydown', function(e) {
                 var key = e.keyCode || e.which;
-                // Geri tuşu (Escape veya Backspace)
                 if (key === 27 || key === 8) {
-                    // Aktif modal varsa kapat
                     var activeModal = document.querySelector('.modal.active');
                     if (activeModal) {
                         var id = activeModal.id;
-                        if (id === 'loginModal') {
-                            // login modal kapatılamaz
-                            return;
-                        }
+                        if (id === 'loginModal') return;
                         self.closeModal(id);
                         e.preventDefault();
                         e.stopPropagation();
                         return;
                     }
                 }
-                // Yön tuşları: kanal listesinde gezinme
                 var list = document.getElementById('channelsList');
                 var focused = list ? list.querySelector('.channel-item.focused') : null;
-                if (key === 40) { // Aşağı
+                if (key === 40) {
                     e.preventDefault();
                     if (focused) {
                         var next = focused.nextElementSibling;
@@ -412,7 +419,7 @@
                         var first = list ? list.querySelector('.channel-item') : null;
                         if (first) first.classList.add('focused');
                     }
-                } else if (key === 38) { // Yukarı
+                } else if (key === 38) {
                     e.preventDefault();
                     if (focused) {
                         var prev = focused.previousElementSibling;
@@ -426,12 +433,11 @@
                         var last = list ? list.querySelector('.channel-item:last-child') : null;
                         if (last) last.classList.add('focused');
                     }
-                } else if (key === 13) { // Enter
+                } else if (key === 13) {
                     e.preventDefault();
                     if (focused) {
                         focused.click();
                     } else {
-                        // Belki odaklanmış buton varsa tıkla
                         var activeEl = document.activeElement;
                         if (activeEl && activeEl.click) activeEl.click();
                     }
@@ -439,10 +445,9 @@
             });
         };
 
-        // ----- Diğer metotlar (ES5) -----
         app.bindEvents = function() {
             var self = this;
-            // Panel yönetimi
+
             document.getElementById('newPanelBtn').addEventListener('click', function() { self.newPanel(); });
             document.getElementById('connectBtn').addEventListener('click', function() { self.connectPanel(); });
             document.getElementById('savePanelBtn').addEventListener('click', function() { self.savePanel(); });
@@ -700,10 +705,12 @@
                         self.notify('✅ Bağlantı başarılı!', 'success');
                         self.closeModal('loginModal');
                     } else {
-                        throw new Error('Geçersiz kimlik bilgileri');
+                        self.notify('❌ Geçersiz kimlik bilgileri.', 'error');
+                        self.state.creds = null;
+                        self.state.userInfo = null;
                     }
                 }, function(err) {
-                    self.notify('❌ Bağlantı başarısız! Kimlik bilgilerinizi kontrol edin.', 'error');
+                    self.notify('❌ Bağlantı başarısız! ' + err, 'error');
                     self.state.creds = null;
                     self.state.userInfo = null;
                 });
@@ -715,12 +722,16 @@
         };
 
         app.checkUrl = function() {
-            var params = new URLSearchParams(location.search);
-            var config = params.get('config');
-            if (config) {
-                this.state.pendingConfig = decodeURIComponent(config);
-                this.closeModal('loginModal');
-                document.getElementById('passwordModal').classList.add('active');
+            try {
+                var params = getQueryParams();
+                var config = params.config;
+                if (config) {
+                    this.state.pendingConfig = decodeURIComponent(config);
+                    this.closeModal('loginModal');
+                    document.getElementById('passwordModal').classList.add('active');
+                }
+            } catch (e) {
+                console.warn('checkUrl hatası:', e);
             }
         };
 
@@ -753,7 +764,6 @@
                 this.state.favorites = config.favorites || [];
                 this.saveFavorites();
 
-                // Kullanıcı bilgilerini al
                 var url = this.buildUrl('player_api.php');
                 httpRequestJson('GET', url, function(data) {
                     if (data.user_info && data.user_info.auth === 1) {
