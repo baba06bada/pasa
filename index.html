@@ -6,7 +6,7 @@
     <title>ÖZKAN IPTV PLAYER</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js"></script>
     <style>
-        /* (Stiller aynı, sadece odak yönetimi için eklentiler) */
+        /* (Stiller aynı, kısaltmak için tekrar yazmadım, yukarıdakiyle aynı) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #ffffff; color: #24292f; line-height: 1.5; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 35, 40, 0.7); z-index: 1000; align-items: center; justify-content: center; }
@@ -320,6 +320,31 @@
                     else console.error('JSON Parse Error:', e);
                 }
             }, errback);
+        }
+
+        // Veriyi diziye dönüştür (API'den farklı yapılar gelebilir)
+        function extractChannels(data) {
+            if (Array.isArray(data)) {
+                return data;
+            }
+            if (data && typeof data === 'object') {
+                // Yaygın alan adları
+                var keys = ['streams', 'data', 'list', 'items', 'channels', 'epg', 'series'];
+                for (var i = 0; i < keys.length; i++) {
+                    var key = keys[i];
+                    if (Array.isArray(data[key])) {
+                        return data[key];
+                    }
+                }
+                // Eğer objenin değerlerinden biri dizi ise onu al
+                var values = Object.values(data);
+                if (values.length === 1 && Array.isArray(values[0])) {
+                    return values[0];
+                }
+                // Hiçbiri yoksa boş dizi
+                return [];
+            }
+            return [];
         }
 
         // Basit şifreleme (sadece base64 + _pass kontrolü)
@@ -847,12 +872,14 @@
                 this.notify('📂 Kategoriler yükleniyor...', 'info');
                 var url = this.buildUrl('player_api.php', 'action=' + actions[this.state.type]);
                 httpRequestJson('GET', url, function(data) {
-                    self.state.categories = Array.isArray(data) ? data : [];
+                    // Kategoriler genelde dizi olur, ama yine de kontrol edelim
+                    var cats = extractChannels(data);
+                    self.state.categories = cats;
                     self.state.catCache[key] = self.state.categories;
                     self.renderCategories();
                 }, function(err) {
                     self.state.categories = [];
-                    self.notify('⚠️ Kategoriler yüklenemedi', 'warning');
+                    self.notify('⚠️ Kategoriler yüklenemedi: ' + err, 'warning');
                 });
             } catch (error) {
                 this.state.categories = [];
@@ -879,20 +906,22 @@
                 if (this.state.category !== 'all') params += '&category_id=' + this.state.category;
                 var url = this.buildUrl('player_api.php', params);
                 httpRequestJson('GET', url, function(data) {
-                    self.state.allChannels = Array.isArray(data) ? data : [];
-                    self.state.channels = self.state.allChannels.slice(0);
+                    // Veriyi diziye dönüştür
+                    var channels = extractChannels(data);
+                    self.state.allChannels = channels;
+                    self.state.channels = channels.slice(0);
                     self.state.cache[key] = self.state.allChannels;
                     self.resetPage();
                     self.renderCategories();
                     self.renderChannels();
                     self.notify('✅ ' + self.state.allChannels.length + ' kanal yüklendi', 'success');
                 }, function(err) {
-                    document.getElementById('channelsList').innerHTML = '<div class="text-center text-small">Kanallar yüklenemedi</div>';
-                    self.notify('❌ Kanallar yüklenemedi', 'error');
+                    document.getElementById('channelsList').innerHTML = '<div class="text-center text-small">Kanallar yüklenemedi: ' + err + '</div>';
+                    self.notify('❌ Kanallar yüklenemedi: ' + err, 'error');
                 });
             } catch (error) {
                 document.getElementById('channelsList').innerHTML = '<div class="text-center text-small">Kanallar yüklenemedi</div>';
-                this.notify('❌ Kanallar yüklenemedi', 'error');
+                this.notify('❌ Kanallar yüklenemedi: ' + error.message, 'error');
             }
         };
 
@@ -1051,10 +1080,10 @@
                     }
                     document.getElementById('episodesModal').classList.add('active');
                 }, function(err) {
-                    self.notify('❌ Bölümler yüklenemedi', 'error');
+                    self.notify('❌ Bölümler yüklenemedi: ' + err, 'error');
                 });
             } catch (error) {
-                this.notify('❌ Bölümler yüklenemedi', 'error');
+                this.notify('❌ Bölümler yüklenemedi: ' + error.message, 'error');
             }
         };
 
@@ -1078,6 +1107,10 @@
             } else if (type === 'movies') {
                 var ext = ch.container_extension || 'mp4';
                 url = serverUrl + '/movie/' + username + '/' + password + '/' + ch.stream_id + '.' + ext;
+            } else if (type === 'series') {
+                // Dizi için özel bir oynatma yok, bölüm seçimi yapılır
+                this.showEpisodes(ch);
+                return;
             }
             this.playStream(url, ch.name || ch.title, ch.category_id);
         };
