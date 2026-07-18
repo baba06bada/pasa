@@ -6,18 +6,36 @@
     <title>ÖZKAN IPTV PLAYER</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js"></script>
     <style>
+        /* ===== TEMEL STİLLER ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #ffffff; color: #24292f; line-height: 1.5; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 35, 40, 0.7); z-index: 1000; align-items: center; justify-content: center; }
-        .modal.active { display: block; } /* flex yerine block */
-        .modal-content { background: white; border-radius: 8px; padding: 32px; max-width: 500px; width: 90%; border: 1px solid #d0d7de; box-shadow: 0 16px 32px rgba(31, 35, 40, 0.15); margin: 40px auto; }
-        .modal-content-large { max-width: 900px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
-        /* --- DİZİ MODAL ÖZEL --- */
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #ffffff;
+            color: #24292f;
+            line-height: 1.5;
+            transition: background 0.3s, color 0.3s;
+        }
+        /* Buton ve başlık stilleri */
+        .btn { padding: 8px 16px; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.15s; font-size: 14px; border: 1px solid #d0d7de; }
+        .btn-primary { background: #0969da; color: white; border-color: #0969da; }
+        .btn-primary:hover { background: #0860ca; border-color: #0860ca; }
+        .btn-success { background: #1a7f37; color: white; border-color: #1a7f37; }
+        .btn-success:hover { background: #1a7731; border-color: #1a7731; }
+        .btn-danger { background: #cf222e; color: white; border-color: #cf222e; }
+        .btn-danger:hover { background: #b5212e; border-color: #b5212e; }
+        .btn-secondary { background: #f6f8fa; color: #24292f; }
+        .btn-secondary:hover { background: #f3f4f6; border-color: #afb8c1; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 35, 40, 0.7); z-index: 1000; overflow-y: auto; }
+        .modal.active { display: block; }
+        .modal-content { background: white; border-radius: 8px; padding: 32px; max-width: 500px; width: 90%; margin: 40px auto; border: 1px solid #d0d7de; box-shadow: 0 16px 32px rgba(31, 35, 40, 0.15); }
+        .modal-content-large { max-width: 900px; }
+
+        /* ---- DİZİ MODAL ÖZEL ---- */
         #episodesModal .modal-content {
             max-width: 900px;
             max-height: 85vh;
             overflow: hidden;
-            display: block;
             padding: 20px 24px;
             margin: 30px auto;
             background: #fff;
@@ -77,7 +95,398 @@
         }
         .episode-item:hover { background: #f6f8fa; border-color: #0969da; }
         .episode-item h3 { font-size: 16px; font-weight: 500; margin: 0; }
-        /* --- Diğer stiller (kısaltıldı) --- */
+
+        /* ================================================================
+           TEMA SINIFLARI – body üzerine eklenir
+           ================================================================ */
+
+        /* ----- 1. Varsayılan Tema (mavi) – zaten yukarıda tanımlı ----- */
+
+        /* ----- 2. Koyu Tema ----- */
+        body.theme-dark {
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+        body.theme-dark .modal-content {
+            background: #252545;
+            border-color: #444;
+            color: #e0e0e0;
+        }
+        body.theme-dark .btn-secondary {
+            background: #333;
+            color: #ddd;
+            border-color: #555;
+        }
+        body.theme-dark .btn-secondary:hover {
+            background: #444;
+        }
+        body.theme-dark .btn-primary {
+            background: #ff9800;
+            border-color: #ff9800;
+            color: #000;
+        }
+        body.theme-dark .btn-primary:hover {
+            background: #ffb74d;
+        }
+        body.theme-dark .btn-success {
+            background: #4caf50;
+            border-color: #4caf50;
+        }
+        body.theme-dark .btn-danger {
+            background: #f44336;
+            border-color: #f44336;
+        }
+        body.theme-dark #episodesModal .modal-content {
+            background: #252545;
+            border-color: #444;
+        }
+        body.theme-dark #episodesModal .modal-header {
+            background: #252545;
+            border-bottom-color: #444;
+        }
+        body.theme-dark #episodesModal .modal-header .close-btn {
+            color: #aaa;
+        }
+        body.theme-dark #episodesModal .modal-header .close-btn:hover {
+            color: #fff;
+        }
+        body.theme-dark .season-header {
+            background: #333;
+            color: #ff9800;
+            border-left-color: #ff9800;
+        }
+        body.theme-dark .episode-item {
+            background: #2a2a4a;
+            border-color: #444;
+            color: #ddd;
+        }
+        body.theme-dark .episode-item:hover {
+            background: #3a3a5a;
+            border-color: #ff9800;
+        }
+        body.theme-dark header,
+        body.theme-dark nav,
+        body.theme-dark .sidebar,
+        body.theme-dark .sidebar-section {
+            background: #1a1a2e;
+            border-color: #333;
+        }
+        body.theme-dark .channel-item {
+            background: #252545;
+            border-color: #333;
+            color: #ddd;
+        }
+        body.theme-dark .channel-item:hover {
+            background: #333;
+        }
+        body.theme-dark .tab.active {
+            background: #ff9800;
+            color: #000;
+        }
+        body.theme-dark .tab.inactive {
+            background: #333;
+            color: #aaa;
+            border-color: #555;
+        }
+        body.theme-dark .tab.inactive:hover {
+            background: #444;
+        }
+        body.theme-dark .badge {
+            background: #333;
+            color: #ddd;
+            border-color: #555;
+        }
+        body.theme-dark .badge-primary {
+            background: #ff9800;
+            color: #000;
+            border-color: #ff9800;
+        }
+        body.theme-dark .badge-success {
+            background: #4caf50;
+            color: #fff;
+            border-color: #4caf50;
+        }
+        body.theme-dark .badge-danger {
+            background: #f44336;
+            color: #fff;
+            border-color: #f44336;
+        }
+        body.theme-dark .badge-warning {
+            background: #ffc107;
+            color: #000;
+            border-color: #ffc107;
+        }
+        body.theme-dark input,
+        body.theme-dark select {
+            background: #333;
+            color: #ddd;
+            border-color: #555;
+        }
+        body.theme-dark input:focus,
+        body.theme-dark select:focus {
+            border-color: #ff9800;
+            box-shadow: 0 0 0 3px rgba(255,152,0,0.2);
+        }
+        body.theme-dark .notification {
+            background: #252545;
+            color: #ddd;
+            border-color: #444;
+        }
+        body.theme-dark .notification.success {
+            border-left-color: #4caf50;
+        }
+        body.theme-dark .notification.error {
+            border-left-color: #f44336;
+        }
+        body.theme-dark .notification.info {
+            border-left-color: #ff9800;
+        }
+        body.theme-dark .notification.warning {
+            border-left-color: #ffc107;
+        }
+        body.theme-dark .panel-item {
+            background: #252545;
+            border-color: #444;
+            color: #ddd;
+        }
+        body.theme-dark .panel-item.active {
+            background: #3a3a5a;
+            border-color: #ff9800;
+        }
+        body.theme-dark .panel-item .pi-name {
+            color: #fff;
+        }
+        body.theme-dark .panel-item .pi-user {
+            color: #ff9800;
+        }
+        body.theme-dark .panel-item .pi-del {
+            color: #f44336;
+        }
+        body.theme-dark .modal-btn {
+            background: #ff9800;
+            color: #000;
+        }
+        body.theme-dark .modal-btn:hover {
+            background: #ffb74d;
+        }
+        body.theme-dark .modal-close {
+            color: #aaa;
+            border-color: #555;
+        }
+        body.theme-dark .modal-close:hover {
+            color: #fff;
+            border-color: #888;
+        }
+        /* Koyu tema için font */
+        body.theme-dark {
+            font-family: Verdana, Geneva, sans-serif;
+        }
+
+        /* ----- 3. Turuncu Tema ----- */
+        body.theme-orange {
+            background: #fff5e6;
+            color: #3d2b1a;
+        }
+        body.theme-orange .btn-primary {
+            background: #e67e22;
+            border-color: #e67e22;
+        }
+        body.theme-orange .btn-primary:hover {
+            background: #d35400;
+        }
+        body.theme-orange .btn-success {
+            background: #27ae60;
+            border-color: #27ae60;
+        }
+        body.theme-orange .btn-danger {
+            background: #c0392b;
+            border-color: #c0392b;
+        }
+        body.theme-orange .season-header {
+            border-left-color: #e67e22;
+            color: #e67e22;
+        }
+        body.theme-orange .episode-item:hover {
+            border-color: #e67e22;
+        }
+        body.theme-orange .tab.active {
+            background: #e67e22;
+            color: #fff;
+        }
+        body.theme-orange .modal-content {
+            background: #fffaf0;
+        }
+        body.theme-orange #episodesModal .modal-content {
+            background: #fffaf0;
+        }
+        body.theme-orange #episodesModal .modal-header {
+            background: #fffaf0;
+        }
+        body.theme-orange .season-header {
+            background: #fdebd0;
+        }
+        body.theme-orange .episode-item {
+            background: #fffefc;
+        }
+        /* Turuncu tema font */
+        body.theme-orange {
+            font-family: Tahoma, Geneva, sans-serif;
+        }
+
+        /* ----- 4. Yeşil Tema ----- */
+        body.theme-green {
+            background: #f0fff0;
+            color: #1a3a1a;
+        }
+        body.theme-green .btn-primary {
+            background: #27ae60;
+            border-color: #27ae60;
+        }
+        body.theme-green .btn-primary:hover {
+            background: #1e8449;
+        }
+        body.theme-green .btn-success {
+            background: #2ecc71;
+            border-color: #2ecc71;
+        }
+        body.theme-green .btn-danger {
+            background: #e74c3c;
+            border-color: #e74c3c;
+        }
+        body.theme-green .season-header {
+            border-left-color: #27ae60;
+            color: #27ae60;
+        }
+        body.theme-green .episode-item:hover {
+            border-color: #27ae60;
+        }
+        body.theme-green .tab.active {
+            background: #27ae60;
+            color: #fff;
+        }
+        body.theme-green .modal-content {
+            background: #fafffa;
+        }
+        body.theme-green #episodesModal .modal-content {
+            background: #fafffa;
+        }
+        body.theme-green #episodesModal .modal-header {
+            background: #fafffa;
+        }
+        body.theme-green .season-header {
+            background: #d5f5e3;
+        }
+        body.theme-green .episode-item {
+            background: #ffffff;
+        }
+        /* Yeşil tema font */
+        body.theme-green {
+            font-family: Georgia, 'Times New Roman', serif;
+        }
+
+        /* ----- 5. Kırmızı Tema ----- */
+        body.theme-red {
+            background: #fff0f0;
+            color: #3d1a1a;
+        }
+        body.theme-red .btn-primary {
+            background: #e74c3c;
+            border-color: #e74c3c;
+        }
+        body.theme-red .btn-primary:hover {
+            background: #c0392b;
+        }
+        body.theme-red .btn-success {
+            background: #2ecc71;
+            border-color: #2ecc71;
+        }
+        body.theme-red .btn-danger {
+            background: #c0392b;
+            border-color: #c0392b;
+        }
+        body.theme-red .season-header {
+            border-left-color: #e74c3c;
+            color: #e74c3c;
+        }
+        body.theme-red .episode-item:hover {
+            border-color: #e74c3c;
+        }
+        body.theme-red .tab.active {
+            background: #e74c3c;
+            color: #fff;
+        }
+        body.theme-red .modal-content {
+            background: #fffafa;
+        }
+        body.theme-red #episodesModal .modal-content {
+            background: #fffafa;
+        }
+        body.theme-red #episodesModal .modal-header {
+            background: #fffafa;
+        }
+        body.theme-red .season-header {
+            background: #fadbd8;
+        }
+        body.theme-red .episode-item {
+            background: #ffffff;
+        }
+        /* Kırmızı tema font */
+        body.theme-red {
+            font-family: 'Trebuchet MS', 'Lucida Sans Unicode', sans-serif;
+        }
+
+        /* ----- 6. Mor Tema ----- */
+        body.theme-purple {
+            background: #f5f0ff;
+            color: #2d1a3d;
+        }
+        body.theme-purple .btn-primary {
+            background: #8e44ad;
+            border-color: #8e44ad;
+        }
+        body.theme-purple .btn-primary:hover {
+            background: #7d3c98;
+        }
+        body.theme-purple .btn-success {
+            background: #27ae60;
+            border-color: #27ae60;
+        }
+        body.theme-purple .btn-danger {
+            background: #e74c3c;
+            border-color: #e74c3c;
+        }
+        body.theme-purple .season-header {
+            border-left-color: #8e44ad;
+            color: #8e44ad;
+        }
+        body.theme-purple .episode-item:hover {
+            border-color: #8e44ad;
+        }
+        body.theme-purple .tab.active {
+            background: #8e44ad;
+            color: #fff;
+        }
+        body.theme-purple .modal-content {
+            background: #fafaff;
+        }
+        body.theme-purple #episodesModal .modal-content {
+            background: #fafaff;
+        }
+        body.theme-purple #episodesModal .modal-header {
+            background: #fafaff;
+        }
+        body.theme-purple .season-header {
+            background: #e8daef;
+        }
+        body.theme-purple .episode-item {
+            background: #ffffff;
+        }
+        /* Mor tema font */
+        body.theme-purple {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* ===== DİĞER MEVCUT STİLLER (KISALTILMIŞ) ===== */
         .notification { position: fixed; top: 20px; right: 20px; background: #ffffff; color: #24292f; padding: 16px 24px; border-radius: 6px; box-shadow: 0 8px 16px rgba(31, 35, 40, 0.2); border: 1px solid #d0d7de; z-index: 2000; animation: slideIn 0.3s ease-out; max-width: 400px; }
         .notification.success { border-left: 4px solid #1a7f37; }
         .notification.error { border-left: 4px solid #cf222e; }
@@ -92,15 +501,6 @@
         label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #24292f; }
         input, select { width: 100%; padding: 12px 16px; background: #ffffff; border: 1px solid #d0d7de; border-radius: 6px; color: #24292f; font-size: 16px; transition: all 0.15s; }
         input:focus, select:focus { outline: none; border-color: #0969da; box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.1); }
-        .btn { padding: 8px 16px; border: 1px solid #d0d7de; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.15s; font-size: 14px; }
-        .btn-primary { background: #0969da; color: white; border-color: #0969da; }
-        .btn-primary:hover { background: #0860ca; border-color: #0860ca; }
-        .btn-secondary { background: #f6f8fa; color: #24292f; }
-        .btn-secondary:hover { background: #f3f4f6; border-color: #afb8c1; }
-        .btn-danger { background: #cf222e; color: white; border-color: #cf222e; }
-        .btn-danger:hover { background: #b5212e; border-color: #b5212e; }
-        .btn-success { background: #1a7f37; color: white; border-color: #1a7f37; }
-        .btn-success:hover { background: #1a7731; border-color: #1a7731; }
         .btn-full { width: 100%; padding: 12px 24px; font-size: 16px; font-weight: 600; }
         .form-group { margin-bottom: 16px; }
         .text-center { text-align: center; }
@@ -177,6 +577,21 @@
         .panel-list-container { height: 100%; overflow-y: auto; }
         @media (min-width: 1024px) { .container { flex-direction: row; } .sidebar { width: 384px; } }
         @media (max-width: 768px) { .header-content { flex-direction: column; } .tabs { flex-wrap: wrap; } .flex { flex-direction: column; } .panel-list { border-right: none !important; padding-right: 0 !important; } .panel-form { padding-left: 0 !important; } }
+
+        /* Tema butonları */
+        .theme-option {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 4px;
+        }
+        .theme-option:hover { transform: scale(1.1); }
+        .theme-option.active { border-color: #000; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000; }
+        body.theme-dark .theme-option.active { border-color: #fff; box-shadow: 0 0 0 2px #000, 0 0 0 4px #fff; }
     </style>
 </head>
 <body>
@@ -292,7 +707,7 @@
         </div>
     </div>
 
-    <!-- Bölümler Modalı (YENİ - SADE) -->
+    <!-- Bölümler Modalı -->
     <div id="episodesModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -343,10 +758,31 @@
         </div>
     </div>
 
+    <!-- Ayarlar Modalı (Tema seçimi eklendi) -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content" style="max-width:600px;">
+            <h2>⚙️ Ayarlar</h2>
+            <div style="margin-bottom:20px;">
+                <h3>🎨 Tema Seçimi</h3>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
+                    <span class="theme-option" style="background:#0969da;" data-theme="default" onclick="applyTheme('default')" title="Varsayılan (Mavi)"></span>
+                    <span class="theme-option" style="background:#1a1a2e;" data-theme="dark" onclick="applyTheme('dark')" title="Koyu"></span>
+                    <span class="theme-option" style="background:#e67e22;" data-theme="orange" onclick="applyTheme('orange')" title="Turuncu"></span>
+                    <span class="theme-option" style="background:#27ae60;" data-theme="green" onclick="applyTheme('green')" title="Yeşil"></span>
+                    <span class="theme-option" style="background:#e74c3c;" data-theme="red" onclick="applyTheme('red')" title="Kırmızı"></span>
+                    <span class="theme-option" style="background:#8e44ad;" data-theme="purple" onclick="applyTheme('purple')" title="Mor"></span>
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <button class="btn btn-secondary" onclick="closeModal('settingsModal')">Kapat</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ------------------------------------------------
         // ES5 Uyumlu, LG Kumanda Desteği, HLS.js v0.14.17
-        // DİZİ MODAL YENİDEN DÜZENLENDİ - SADE VE SAĞLAM
+        // TEMA SEÇENEKLİ SÜRÜM
         // ------------------------------------------------
 
         var app = {};
@@ -418,6 +854,51 @@
             return params;
         }
 
+        // ----- TEMA FONKSİYONLARI -----
+        function applyTheme(themeName) {
+            // Tüm theme sınıflarını kaldır
+            var themes = ['default', 'dark', 'orange', 'green', 'red', 'purple'];
+            for (var i = 0; i < themes.length; i++) {
+                document.body.classList.remove('theme-' + themes[i]);
+            }
+            if (themeName !== 'default') {
+                document.body.classList.add('theme-' + themeName);
+            }
+            // localStorage'a kaydet
+            try { localStorage.setItem('iptv_theme', themeName); } catch(e) {}
+            // Tema butonlarını güncelle
+            var options = document.querySelectorAll('.theme-option');
+            for (var j = 0; j < options.length; j++) {
+                var btnTheme = options[j].getAttribute('data-theme');
+                options[j].classList.toggle('active', btnTheme === themeName);
+            }
+            // Modal'ı kapat
+            closeModal('settingsModal');
+        }
+
+        function loadTheme() {
+            var saved = null;
+            try { saved = localStorage.getItem('iptv_theme'); } catch(e) {}
+            if (saved) {
+                applyTheme(saved);
+            } else {
+                // Varsayılan tema aktif
+                document.body.classList.remove('theme-dark', 'theme-orange', 'theme-green', 'theme-red', 'theme-purple');
+                var options = document.querySelectorAll('.theme-option');
+                for (var i = 0; i < options.length; i++) {
+                    options[i].classList.toggle('active', options[i].getAttribute('data-theme') === 'default');
+                }
+            }
+        }
+
+        function openSettings() {
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
         // ----- app nesnesi -----
         app.state = {
             creds: null,
@@ -448,6 +929,7 @@
             this.bindEvents();
             this.renderPanelList();
             this.bindRemoteKeys();
+            loadTheme(); // Tema yükle
         };
 
         app.bindRemoteKeys = function() {
@@ -541,6 +1023,11 @@
                 self.changeCategory(e.target.value);
             });
 
+            // Ayarlar butonu - Menüden ayarları aç
+            document.getElementById('sm-settings').addEventListener('click', function() {
+                openSettings();
+            });
+
             var tabs = document.querySelectorAll('.tab');
             for (var i = 0; i < tabs.length; i++) {
                 (function(btn) {
@@ -555,6 +1042,11 @@
             });
         };
 
+        app.closeModal = function(id) {
+            closeModal(id);
+        };
+
+        // ----- Diğer mevcut fonksiyonlar (kısaltıldı, aynı mantık) -----
         app.cleanPanels = function() {
             var changed = false;
             var panels = [];
@@ -759,7 +1251,6 @@
             this.doLogin({ serverUrl: serverUrl, username: username, password: password });
         };
 
-        // ----- Giriş İşlemleri -----
         app.doLogin = function(creds) {
             var self = this;
             this.state.creds = creds;
@@ -852,7 +1343,6 @@
             }
         };
 
-        // ----- Uygulama Yükleme -----
         app.loadApp = function() {
             this.closeModal('loginModal');
             document.getElementById('mainApp').classList.remove('hidden');
@@ -895,7 +1385,6 @@
             expiryEl.classList.remove('hidden');
         };
 
-        // ----- Kategori ve Kanal İşlemleri -----
         app.loadCategories = function() {
             var self = this;
             var key = this.state.type;
@@ -1078,9 +1567,7 @@
             document.getElementById('channelsList').innerHTML = html;
         };
 
-        // ============================================================
-        //  DİZİ BÖLÜMLERİ - YENİ MODAL (SADE VE SAĞLAM)
-        // ============================================================
+        // ----- DİZİ BÖLÜMLERİ (modal düzeltilmiş) -----
         app.showEpisodes = function(series) {
             var self = this;
             try {
@@ -1088,18 +1575,13 @@
                 var url = this.buildUrl('player_api.php', 'action=get_series_info&series_id=' + series.series_id);
                 httpRequestJson('GET', url, function(data) {
                     try {
-                        // Başlığı ayarla
                         document.getElementById('seriesTitle').textContent = series.name || series.title;
                         var list = document.getElementById('episodesList');
                         list.innerHTML = '';
 
-                        // 1. Doğrudan data.episodes var mı?
                         var episodesData = data.episodes;
-
-                        // 2. Eğer yoksa, data.seasons içinde episodes arayalım
                         var seasonsData = data.seasons || data.Seasons || data.season || data.Season;
 
-                        // 3. Eğer episodesData hala yoksa ve seasonsData varsa, seasons içindeki episodes'ları topla
                         if (!episodesData && seasonsData && Array.isArray(seasonsData)) {
                             var collected = {};
                             for (var si = 0; si < seasonsData.length; si++) {
@@ -1115,13 +1597,11 @@
                             }
                         }
 
-                        // 4. Eğer episodesData bir dizi ise, sezonlara göre grupla
                         var seasonsMap = {};
                         var hasEpisodes = false;
 
                         if (episodesData) {
                             if (Array.isArray(episodesData)) {
-                                // Dizi formatı: her öğede season alanı var mı?
                                 for (var j = 0; j < episodesData.length; j++) {
                                     var ep = episodesData[j];
                                     var seasonNum = ep.season || ep.season_number || ep.season_no || 1;
@@ -1132,7 +1612,6 @@
                                 }
                                 hasEpisodes = true;
                             } else if (typeof episodesData === 'object') {
-                                // Obje formatı: anahtarlar sezon numarası
                                 for (var seasonKey in episodesData) {
                                     if (episodesData.hasOwnProperty(seasonKey)) {
                                         var val = episodesData[seasonKey];
@@ -1145,7 +1624,6 @@
                             }
                         }
 
-                        // 5. Eğer hala bölüm yoksa, bildirim göster
                         if (!hasEpisodes) {
                             list.innerHTML = '<div class="text-center text-small" style="padding:40px;color:#888;">⚠️ Bu dizi için bölüm bilgisi bulunamadı.</div>';
                             self.notify('⚠️ Bölüm verisi yok.', 'warning');
@@ -1153,7 +1631,6 @@
                             return;
                         }
 
-                        // 6. Sezonları sırala
                         var seasonNumbers = [];
                         for (var s in seasonsMap) {
                             if (seasonsMap.hasOwnProperty(s)) {
@@ -1162,7 +1639,6 @@
                         }
                         seasonNumbers.sort(function(a, b) { return parseInt(a, 10) - parseInt(b, 10); });
 
-                        // 7. HTML oluştur
                         var html = '';
                         for (var si2 = 0; si2 < seasonNumbers.length; si2++) {
                             var seasonNum = seasonNumbers[si2];
@@ -1188,7 +1664,6 @@
                         list.innerHTML = html;
                         self.notify('✅ ' + seasonNumbers.length + ' sezon yüklendi', 'success');
 
-                        // 8. Bölüm tıklama olayları
                         var epItems = list.querySelectorAll('.episode-item');
                         for (var i = 0; i < epItems.length; i++) {
                             (function(item) {
@@ -1206,7 +1681,6 @@
                             })(epItems[i]);
                         }
 
-                        // 9. Modal'ı aç
                         document.getElementById('episodesModal').classList.add('active');
 
                     } catch (e) {
@@ -1546,10 +2020,6 @@
             this.renderPanelList();
         };
 
-        app.closeModal = function(id) {
-            document.getElementById(id).classList.remove('active');
-        };
-
         app.notify = function(msg, type) {
             type = type || 'info';
             var div = document.createElement('div');
@@ -1572,6 +2042,9 @@
         // ----- Başlat -----
         document.addEventListener('DOMContentLoaded', function() {
             app.init();
+            // Menüye ayarlar butonu ekle (zaten HTML'de var, olay bağlandı)
+            // Tema seçeneklerine aktif sınıfını ekle
+            loadTheme();
         });
     </script>
 </body>
