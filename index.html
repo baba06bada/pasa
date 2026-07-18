@@ -7,7 +7,7 @@
     <!-- HLS.js eski sürüm (Chrome 34 uyumlu) -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js"></script>
     <style>
-        /* (Stiller aynı, sadece odak yönetimi için eklentiler) */
+        /* (Stiller aynı, kısaltmak için tekrar yazmadım) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #ffffff; color: #24292f; line-height: 1.5; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 35, 40, 0.7); z-index: 1000; align-items: center; justify-content: center; }
@@ -286,7 +286,7 @@
     <script>
         // ------------------------------------------------
         // ES5 Uyumlu, LG Kumanda Desteği, HLS.js v0.14.17
-        // ORİJİNAL KOD - SADECE UYUMLULUK DÜZELTMELERİ
+        // DİZİ BÖLÜMLERİ DÜZELTİLDİ - seasons içindeki episodes'u da algılar
         // ------------------------------------------------
 
         var app = {};
@@ -481,7 +481,6 @@
                 self.changeCategory(e.target.value);
             });
 
-            // NodeList.forEach yerine for döngüsü
             var tabs = document.querySelectorAll('.tab');
             for (var i = 0; i < tabs.length; i++) {
                 (function(btn) {
@@ -1019,54 +1018,151 @@
             document.getElementById('channelsList').innerHTML = html;
         };
 
-        // ----- Bölümler, Oynatma, Favoriler -----
+        // ============================================================
+        //  DİZİ BÖLÜMLERİ - GELİŞTİRİLMİŞ (seasons içindeki episodes'u da bulur)
+        // ============================================================
         app.showEpisodes = function(series) {
             var self = this;
             try {
                 this.notify('📺 Bölümler yükleniyor...', 'info');
                 var url = this.buildUrl('player_api.php', 'action=get_series_info&series_id=' + series.series_id);
                 httpRequestJson('GET', url, function(data) {
-                    document.getElementById('seriesTitle').textContent = series.name || series.title;
-                    var list = document.getElementById('episodesList');
-                    if (!data.episodes || Object.keys(data.episodes).length === 0) {
-                        list.innerHTML = '<div class="text-center text-small">Bölüm bulunmuyor</div>';
-                    } else {
-                        var seasons = Object.keys(data.episodes).sort(function(a, b) { return a - b; });
+                    try {
+                        document.getElementById('seriesTitle').textContent = series.name || series.title;
+                        var list = document.getElementById('episodesList');
+
+                        // 1. Doğrudan data.episodes var mı?
+                        var episodesData = data.episodes;
+
+                        // 2. Eğer yoksa, data.seasons içinde episodes arayalım
+                        var seasonsData = data.seasons || data.Seasons || data.season || data.Season;
+
+                        // 3. Eğer episodesData hala yoksa ve seasonsData varsa, seasons içindeki episodes'ları topla
+                        if (!episodesData && seasonsData && Array.isArray(seasonsData)) {
+                            var collected = {};
+                            for (var si = 0; si < seasonsData.length; si++) {
+                                var season = seasonsData[si];
+                                var seasonNum = season.season_number || season.number || season.id || (si + 1);
+                                var eps = season.episodes || season.Episodes || season.episode || season.data;
+                                if (eps && Array.isArray(eps)) {
+                                    collected[seasonNum] = eps;
+                                }
+                            }
+                            if (Object.keys(collected).length > 0) {
+                                episodesData = collected;
+                            }
+                        }
+
+                        // 4. Eğer episodesData bir dizi ise, sezonlara göre grupla
+                        var seasonsMap = {};
+                        var hasEpisodes = false;
+
+                        if (episodesData) {
+                            if (Array.isArray(episodesData)) {
+                                // Dizi formatı: her öğede season alanı var mı?
+                                for (var j = 0; j < episodesData.length; j++) {
+                                    var ep = episodesData[j];
+                                    var seasonNum = ep.season || ep.season_number || ep.season_no || 1;
+                                    if (!seasonsMap[seasonNum]) {
+                                        seasonsMap[seasonNum] = [];
+                                    }
+                                    seasonsMap[seasonNum].push(ep);
+                                }
+                                hasEpisodes = true;
+                            } else if (typeof episodesData === 'object') {
+                                // Obje formatı: anahtarlar sezon numarası
+                                for (var seasonKey in episodesData) {
+                                    if (episodesData.hasOwnProperty(seasonKey)) {
+                                        var val = episodesData[seasonKey];
+                                        if (Array.isArray(val) && val.length > 0) {
+                                            seasonsMap[seasonKey] = val;
+                                            hasEpisodes = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // 5. Eğer hala bölüm yoksa, bildirim göster
+                        if (!hasEpisodes) {
+                            list.innerHTML = '<div class="text-center text-small">⚠️ Bu dizi için bölüm bilgisi bulunamadı.</div>';
+                            self.notify('⚠️ Bölüm verisi yok.', 'warning');
+                            document.getElementById('episodesModal').classList.add('active');
+                            return;
+                        }
+
+                        // 6. Sezonları sırala
+                        var seasonNumbers = [];
+                        for (var s in seasonsMap) {
+                            if (seasonsMap.hasOwnProperty(s)) {
+                                seasonNumbers.push(s);
+                            }
+                        }
+                        seasonNumbers.sort(function(a, b) { return parseInt(a, 10) - parseInt(b, 10); });
+
+                        // 7. HTML oluştur
                         var html = '';
-                        for (var s = 0; s < seasons.length; s++) {
-                            var seasonNum = seasons[s];
-                            var eps = data.episodes[seasonNum];
-                            html += '<div class="season-header">Sezon ' + seasonNum + '</div>';
-                            for (var e = 0; e < eps.length; e++) {
-                                var ep = eps[e];
+                        for (var si2 = 0; si2 < seasonNumbers.length; si2++) {
+                            var seasonNum = seasonNumbers[si2];
+                            var eps = seasonsMap[seasonNum];
+                            html += '<div class="season-header">📺 Sezon ' + seasonNum + ' (' + eps.length + ' bölüm)</div>';
+                            eps.sort(function(a, b) {
+                                var numA = a.episode_num || a.episode_number || a.num || a.id || 0;
+                                var numB = b.episode_num || b.episode_number || b.num || b.id || 0;
+                                return parseInt(numA, 10) - parseInt(numB, 10);
+                            });
+                            for (var ei = 0; ei < eps.length; ei++) {
+                                var ep = eps[ei];
+                                var epNum = ep.episode_num || ep.episode_number || ep.num || ep.id || (ei + 1);
+                                var title = ep.title || ep.name || ep.episode_name || 'Bölüm ' + epNum;
                                 var epJson = JSON.stringify(ep).replace(/'/g, '&apos;');
                                 var seriesJson = JSON.stringify(series).replace(/'/g, '&apos;');
                                 html += '<div class="episode-item" data-ep=\'' + epJson + '\' data-series=\'' + seriesJson + '\'>' +
-                                    '<h3>Bölüm ' + ep.episode_num + ': ' + self.escape(ep.title || 'Başlıksız') + '</h3>' +
+                                    '<h3>🎬 Bölüm ' + epNum + ': ' + self.escape(title) + '</h3>' +
                                     '</div>';
                             }
                         }
-                        list.innerHTML = html;
 
+                        list.innerHTML = html;
+                        self.notify('✅ ' + seasonNumbers.length + ' sezon yüklendi', 'success');
+
+                        // 8. Bölüm tıklama olayları
                         var epItems = list.querySelectorAll('.episode-item');
                         for (var i = 0; i < epItems.length; i++) {
                             (function(item) {
                                 item.addEventListener('click', function() {
-                                    var ep = JSON.parse(item.dataset.ep);
-                                    var ser = JSON.parse(item.dataset.series);
-                                    self.playEpisode(ep, ser);
-                                    self.closeModal('episodesModal');
+                                    try {
+                                        var ep = JSON.parse(item.dataset.ep);
+                                        var ser = JSON.parse(item.dataset.series);
+                                        self.playEpisode(ep, ser);
+                                        self.closeModal('episodesModal');
+                                    } catch (e) {
+                                        console.error('Bölüm tıklama hatası:', e);
+                                        self.notify('Bölüm oynatma hatası: ' + e.message, 'error');
+                                    }
                                 });
                             })(epItems[i]);
                         }
-                        self.notify('✅ ' + Object.keys(data.episodes).length + ' sezon yüklendi', 'success');
+
+                        // 9. Modal'ı aç
+                        document.getElementById('episodesModal').classList.add('active');
+
+                    } catch (e) {
+                        console.error('Bölüm işleme hatası:', e);
+                        document.getElementById('episodesList').innerHTML = '<div class="text-center text-small">❌ Bölüm işleme hatası: ' + e.message + '</div>';
+                        self.notify('❌ Bölüm işleme hatası: ' + e.message, 'error');
+                        document.getElementById('episodesModal').classList.add('active');
                     }
-                    document.getElementById('episodesModal').classList.add('active');
                 }, function(err) {
-                    self.notify('❌ Bölümler yüklenemedi', 'error');
+                    console.error('Bölüm yükleme hatası:', err);
+                    document.getElementById('episodesList').innerHTML = '<div class="text-center text-small">❌ Bölümler yüklenemedi: ' + err + '</div>';
+                    self.notify('❌ Bölümler yüklenemedi: ' + err, 'error');
+                    document.getElementById('episodesModal').classList.add('active');
                 });
             } catch (error) {
-                this.notify('❌ Bölümler yüklenemedi', 'error');
+                console.error('showEpisodes hatası:', error);
+                this.notify('❌ Bölümler yüklenemedi: ' + error.message, 'error');
+                document.getElementById('episodesModal').classList.add('active');
             }
         };
 
