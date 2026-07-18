@@ -15,6 +15,8 @@
             line-height: 1.5;
             transition: background 0.3s, color 0.3s;
         }
+
+        /* ===== BUTON & GENEL ===== */
         .btn { padding: 8px 16px; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.15s; font-size: 14px; border: 1px solid #d0d7de; }
         .btn-primary { background: #0969da; color: white; border-color: #0969da; }
         .btn-primary:hover { background: #0860ca; border-color: #0860ca; }
@@ -119,256 +121,156 @@
         .episode-item h3 { font-size: 16px; font-weight: 500; margin: 0; }
 
         /* ================================================================
-           TEMA SINIFLARI – TÜM UI ELEMANLARI KAPSAYACAK
+           TEMA SINIFLARI – body üzerine eklenir (TÜM UI ELEMANLARI)
            ================================================================ */
 
         /* ----- Varsayılan Tema (açık) ----- */
-        body.theme-default {
-            background: #ffffff;
-            color: #24292f;
-        }
-        body.theme-default header,
-        body.theme-default nav,
-        body.theme-default .sidebar,
-        body.theme-default .sidebar-section {
-            background: #ffffff;
-            border-color: #d0d7de;
-        }
-        body.theme-default .channel-item {
-            background: #ffffff;
-            border-color: #d0d7de;
-            color: #24292f;
-        }
-        body.theme-default .channel-item:hover {
-            background: #f6f8fa;
-        }
-        body.theme-default .tab.active {
-            background: #0969da;
-            color: white;
-        }
-        body.theme-default .tab.inactive {
-            background: white;
-            color: #57606a;
-            border-color: #d0d7de;
-        }
-        body.theme-default .tab.inactive:hover {
-            background: #f6f8fa;
-        }
-        body.theme-default .badge {
-            background: #f6f8fa;
-            color: #24292f;
-            border-color: #d0d7de;
-        }
-        body.theme-default .badge-primary {
-            background: #ddf4ff;
-            color: #0969da;
-            border-color: #c1dff8;
-        }
-        body.theme-default .badge-success {
-            background: #dafbe1;
-            color: #1a7f37;
-            border-color: #c2e8ce;
-        }
-        body.theme-default .badge-warning {
-            background: #fff8c5;
-            color: #9a6700;
-            border-color: #f4e8aa;
-        }
-        body.theme-default .badge-danger {
-            background: #ffebe9;
-            color: #cf222e;
-            border-color: #ffd8d3;
-        }
-        body.theme-default .season-header {
-            background: #f6f8fa;
-            color: #1a1a2e;
-            border-left-color: #0969da;
-        }
-        body.theme-default .episode-item {
-            background: white;
-            border-color: #e1e4e8;
-            color: #24292f;
-        }
-        body.theme-default .episode-item:hover {
-            background: #f6f8fa;
-            border-color: #0969da;
-        }
-        body.theme-default .modal-content {
-            background: white;
-            border-color: #d0d7de;
-            color: #24292f;
-        }
-        body.theme-default #episodesModal .modal-content {
-            background: #fff;
-        }
-        body.theme-default #episodesModal .modal-header {
-            background: #fff;
-            border-bottom-color: #f0f0f0;
-        }
-        body.theme-default .panel-item {
-            background: white;
-            border-color: #d0d7de;
-            color: #24292f;
-        }
-        body.theme-default .panel-item.active {
-            background: #ddf4ff;
-            border-color: #0969da;
-        }
-        body.theme-default .panel-item .pi-name { color: #24292f; }
-        body.theme-default .panel-item .pi-user { color: #0969da; }
-        body.theme-default .panel-item .pi-del { color: #cf222e; }
-        body.theme-default input, body.theme-default select {
-            background: #ffffff;
-            color: #24292f;
-            border-color: #d0d7de;
-        }
-        body.theme-default input:focus, body.theme-default select:focus {
-            border-color: #0969da;
-            box-shadow: 0 0 0 3px rgba(9,105,218,0.1);
-        }
-        body.theme-default .notification {
-            background: #ffffff;
-            color: #24292f;
-            border-color: #d0d7de;
-        }
-        body.theme-default .notification.success { border-left-color: #1a7f37; }
-        body.theme-default .notification.error { border-left-color: #cf222e; }
-        body.theme-default .notification.info { border-left-color: #0969da; }
-        body.theme-default .notification.warning { border-left-color: #bf8700; }
-        body.theme-default .btn-secondary {
-            background: #f6f8fa;
-            color: #24292f;
-            border-color: #d0d7de;
-        }
-        body.theme-default .btn-secondary:hover {
-            background: #f3f4f6;
-            border-color: #afb8c1;
-        }
-        body.theme-default .modal-btn { background: #0969da; color: white; }
-        body.theme-default .modal-btn:hover { background: #0860ca; }
-        body.theme-default .modal-close { background: transparent; color: #57606a; border-color: #d0d7de; }
-        body.theme-default .modal-close:hover { background: #f6f8fa; }
+        /* zaten yukarıda tanımlı, ekstra bir şey gerekmez */
 
-        /* ----- Koyu Tema (Dark) ----- */
+        /* ----- KOYU TEMA (TÜM UI) ----- */
         body.theme-dark {
-            background: #0d1117;
-            color: #c9d1d9;
+            background: #12121e;
+            color: #e0e0e0;
         }
-        body.theme-dark header,
-        body.theme-dark nav,
-        body.theme-dark .sidebar,
-        body.theme-dark .sidebar-section {
-            background: #161b22;
-            border-color: #30363d;
+        /* Header */
+        body.theme-dark header {
+            background: #1a1a2e;
+            border-bottom-color: #333;
         }
-        body.theme-dark .channel-item {
-            background: #161b22;
-            border-color: #30363d;
-            color: #c9d1d9;
+        body.theme-dark header .badge {
+            background: #333;
+            color: #ddd;
+            border-color: #555;
         }
-        body.theme-dark .channel-item:hover {
-            background: #1c2128;
+        body.theme-dark header .badge-primary {
+            background: #ff9800;
+            color: #000;
+            border-color: #ff9800;
+        }
+        body.theme-dark header .badge-success {
+            background: #4caf50;
+            color: #fff;
+            border-color: #4caf50;
+        }
+        /* Nav (tabs) */
+        body.theme-dark nav {
+            background: #1a1a2e;
+            border-bottom-color: #333;
         }
         body.theme-dark .tab.active {
             background: #ff9800;
             color: #000;
         }
         body.theme-dark .tab.inactive {
-            background: #21262d;
-            color: #8b949e;
-            border-color: #30363d;
+            background: #333;
+            color: #aaa;
+            border-color: #555;
         }
         body.theme-dark .tab.inactive:hover {
-            background: #30363d;
+            background: #444;
         }
-        body.theme-dark .badge {
-            background: #21262d;
-            color: #c9d1d9;
-            border-color: #30363d;
+        /* Sidebar */
+        body.theme-dark .sidebar {
+            background: #1a1a2e;
+            border-right-color: #333;
         }
-        body.theme-dark .badge-primary {
-            background: #ff9800;
-            color: #000;
+        body.theme-dark .sidebar-section {
+            background: #1a1a2e;
+            border-bottom-color: #333;
+        }
+        body.theme-dark .sidebar-item {
+            color: #ddd;
+        }
+        body.theme-dark .sidebar-item.focused {
+            background: rgba(255,152,0,0.15);
+            border-left-color: #ff9800;
+        }
+        /* Kategori listesi (orta sütun) */
+        body.theme-dark .app-categories {
+            background: #1a1a2e;
+            border-right-color: #333;
+        }
+        body.theme-dark .app-categories h3 {
+            color: #ff9800;
+            border-bottom-color: #333;
+        }
+        body.theme-dark .app-categories .sidebar-item {
+            color: #ccc;
+        }
+        body.theme-dark .app-categories .sidebar-item.focused {
+            background: rgba(255,152,0,0.12);
+            border-left-color: #ff9800;
+        }
+        /* Kanal listesi */
+        body.theme-dark .channels-list {
+            background: #12121e;
+        }
+        body.theme-dark .channel-item {
+            background: #1e1e32;
+            border-color: #333;
+            color: #ddd;
+        }
+        body.theme-dark .channel-item:hover {
+            background: #2a2a4a;
+        }
+        body.theme-dark .channel-item.focused {
             border-color: #ff9800;
+            box-shadow: 0 0 0 2px rgba(255,152,0,0.3);
         }
-        body.theme-dark .badge-success {
-            background: #2ea043;
+        /* Search & select */
+        body.theme-dark input,
+        body.theme-dark select {
+            background: #2a2a4a;
+            color: #ddd;
+            border-color: #555;
+        }
+        body.theme-dark input:focus,
+        body.theme-dark select:focus {
+            border-color: #ff9800;
+            box-shadow: 0 0 0 3px rgba(255,152,0,0.2);
+        }
+        /* Modal'lar */
+        body.theme-dark .modal-content {
+            background: #252545;
+            border-color: #444;
+            color: #e0e0e0;
+        }
+        body.theme-dark #episodesModal .modal-content {
+            background: #252545;
+            border-color: #444;
+        }
+        body.theme-dark #episodesModal .modal-header {
+            background: #252545;
+            border-bottom-color: #444;
+        }
+        body.theme-dark #episodesModal .modal-header .close-btn {
+            color: #aaa;
+        }
+        body.theme-dark #episodesModal .modal-header .close-btn:hover {
             color: #fff;
-            border-color: #2ea043;
-        }
-        body.theme-dark .badge-warning {
-            background: #d29922;
-            color: #000;
-            border-color: #d29922;
-        }
-        body.theme-dark .badge-danger {
-            background: #f44336;
-            color: #fff;
-            border-color: #f44336;
         }
         body.theme-dark .season-header {
-            background: #21262d;
+            background: #333;
             color: #ff9800;
             border-left-color: #ff9800;
         }
         body.theme-dark .episode-item {
-            background: #161b22;
-            border-color: #30363d;
-            color: #c9d1d9;
+            background: #2a2a4a;
+            border-color: #444;
+            color: #ddd;
         }
         body.theme-dark .episode-item:hover {
-            background: #1c2128;
+            background: #3a3a5a;
             border-color: #ff9800;
         }
-        body.theme-dark .modal-content {
-            background: #161b22;
-            border-color: #30363d;
-            color: #c9d1d9;
-        }
-        body.theme-dark #episodesModal .modal-content {
-            background: #161b22;
-        }
-        body.theme-dark #episodesModal .modal-header {
-            background: #161b22;
-            border-bottom-color: #30363d;
-        }
-        body.theme-dark .panel-item {
-            background: #161b22;
-            border-color: #30363d;
-            color: #c9d1d9;
-        }
-        body.theme-dark .panel-item.active {
-            background: #21262d;
-            border-color: #ff9800;
-        }
-        body.theme-dark .panel-item .pi-name { color: #f0f6fc; }
-        body.theme-dark .panel-item .pi-user { color: #ff9800; }
-        body.theme-dark .panel-item .pi-del { color: #f44336; }
-        body.theme-dark input, body.theme-dark select {
-            background: #0d1117;
-            color: #c9d1d9;
-            border-color: #30363d;
-        }
-        body.theme-dark input:focus, body.theme-dark select:focus {
-            border-color: #ff9800;
-            box-shadow: 0 0 0 3px rgba(255,152,0,0.2);
-        }
-        body.theme-dark .notification {
-            background: #161b22;
-            color: #c9d1d9;
-            border-color: #30363d;
-        }
-        body.theme-dark .notification.success { border-left-color: #2ea043; }
-        body.theme-dark .notification.error { border-left-color: #f44336; }
-        body.theme-dark .notification.info { border-left-color: #ff9800; }
-        body.theme-dark .notification.warning { border-left-color: #d29922; }
+        /* Butonlar */
         body.theme-dark .btn-secondary {
-            background: #21262d;
-            color: #c9d1d9;
-            border-color: #30363d;
+            background: #333;
+            color: #ddd;
+            border-color: #555;
         }
         body.theme-dark .btn-secondary:hover {
-            background: #30363d;
+            background: #444;
         }
         body.theme-dark .btn-primary {
             background: #ff9800;
@@ -379,880 +281,133 @@
             background: #ffb74d;
         }
         body.theme-dark .btn-success {
-            background: #2ea043;
-            border-color: #2ea043;
+            background: #4caf50;
+            border-color: #4caf50;
         }
         body.theme-dark .btn-danger {
             background: #f44336;
             border-color: #f44336;
         }
-        body.theme-dark .modal-btn { background: #ff9800; color: #000; }
-        body.theme-dark .modal-btn:hover { background: #ffb74d; }
-        body.theme-dark .modal-close { background: transparent; color: #8b949e; border-color: #30363d; }
-        body.theme-dark .modal-close:hover { background: #21262d; color: #c9d1d9; }
-        body.theme-dark { font-family: Verdana, Geneva, sans-serif; }
-
-        /* ----- Turuncu Tema ----- */
-        body.theme-orange {
-            background: #fff5e6;
-            color: #3d2b1a;
+        /* Bildirim */
+        body.theme-dark .notification {
+            background: #252545;
+            color: #ddd;
+            border-color: #444;
         }
-        body.theme-orange header,
-        body.theme-orange nav,
-        body.theme-orange .sidebar,
-        body.theme-orange .sidebar-section {
-            background: #ffecd9;
-            border-color: #f0c8a0;
+        body.theme-dark .notification.success {
+            border-left-color: #4caf50;
         }
-        body.theme-orange .channel-item {
-            background: #fffaf0;
-            border-color: #f0c8a0;
-            color: #3d2b1a;
+        body.theme-dark .notification.error {
+            border-left-color: #f44336;
         }
-        body.theme-orange .channel-item:hover {
-            background: #ffecd9;
+        body.theme-dark .notification.info {
+            border-left-color: #ff9800;
         }
-        body.theme-orange .tab.active {
-            background: #e67e22;
+        body.theme-dark .notification.warning {
+            border-left-color: #ffc107;
+        }
+        /* Panel yönetimi */
+        body.theme-dark .panel-item {
+            background: #252545;
+            border-color: #444;
+            color: #ddd;
+        }
+        body.theme-dark .panel-item.active {
+            background: #3a3a5a;
+            border-color: #ff9800;
+        }
+        body.theme-dark .panel-item .pi-name {
             color: #fff;
         }
-        body.theme-orange .tab.inactive {
-            background: #fffaf0;
-            color: #7a5a3a;
-            border-color: #f0c8a0;
+        body.theme-dark .panel-item .pi-user {
+            color: #ff9800;
         }
-        body.theme-orange .tab.inactive:hover {
-            background: #ffecd9;
+        body.theme-dark .panel-item .pi-del {
+            color: #f44336;
         }
-        body.theme-orange .badge {
-            background: #ffecd9;
-            color: #3d2b1a;
-            border-color: #f0c8a0;
-        }
-        body.theme-orange .badge-primary {
-            background: #e67e22;
-            color: #fff;
-            border-color: #e67e22;
-        }
-        body.theme-orange .badge-success {
-            background: #27ae60;
-            color: #fff;
-            border-color: #27ae60;
-        }
-        body.theme-orange .badge-warning {
-            background: #f39c12;
-            color: #fff;
-            border-color: #f39c12;
-        }
-        body.theme-orange .badge-danger {
-            background: #c0392b;
-            color: #fff;
-            border-color: #c0392b;
-        }
-        body.theme-orange .season-header {
-            background: #ffecd9;
-            color: #e67e22;
-            border-left-color: #e67e22;
-        }
-        body.theme-orange .episode-item {
-            background: #fffaf0;
-            border-color: #f0c8a0;
-            color: #3d2b1a;
-        }
-        body.theme-orange .episode-item:hover {
-            background: #ffecd9;
-            border-color: #e67e22;
-        }
-        body.theme-orange .modal-content {
-            background: #fffaf0;
-            border-color: #f0c8a0;
-            color: #3d2b1a;
-        }
-        body.theme-orange #episodesModal .modal-content {
-            background: #fffaf0;
-        }
-        body.theme-orange #episodesModal .modal-header {
-            background: #fffaf0;
-            border-bottom-color: #f0c8a0;
-        }
-        body.theme-orange .panel-item {
-            background: #fffaf0;
-            border-color: #f0c8a0;
-            color: #3d2b1a;
-        }
-        body.theme-orange .panel-item.active {
-            background: #ffecd9;
-            border-color: #e67e22;
-        }
-        body.theme-orange .panel-item .pi-name { color: #3d2b1a; }
-        body.theme-orange .panel-item .pi-user { color: #e67e22; }
-        body.theme-orange .panel-item .pi-del { color: #c0392b; }
-        body.theme-orange input, body.theme-orange select {
-            background: #fffaf0;
-            color: #3d2b1a;
-            border-color: #f0c8a0;
-        }
-        body.theme-orange input:focus, body.theme-orange select:focus {
-            border-color: #e67e22;
-            box-shadow: 0 0 0 3px rgba(230,126,34,0.2);
-        }
-        body.theme-orange .notification {
-            background: #fffaf0;
-            color: #3d2b1a;
-            border-color: #f0c8a0;
-        }
-        body.theme-orange .notification.success { border-left-color: #27ae60; }
-        body.theme-orange .notification.error { border-left-color: #c0392b; }
-        body.theme-orange .notification.info { border-left-color: #e67e22; }
-        body.theme-orange .notification.warning { border-left-color: #f39c12; }
-        body.theme-orange .btn-secondary {
-            background: #ffecd9;
-            color: #3d2b1a;
-            border-color: #f0c8a0;
-        }
-        body.theme-orange .btn-secondary:hover {
-            background: #ffdbb5;
-        }
-        body.theme-orange .btn-primary {
-            background: #e67e22;
-            border-color: #e67e22;
-            color: #fff;
-        }
-        body.theme-orange .btn-primary:hover {
-            background: #d35400;
-        }
-        body.theme-orange .btn-success {
-            background: #27ae60;
-            border-color: #27ae60;
-        }
-        body.theme-orange .btn-danger {
-            background: #c0392b;
-            border-color: #c0392b;
-        }
-        body.theme-orange .modal-btn { background: #e67e22; color: #fff; }
-        body.theme-orange .modal-btn:hover { background: #d35400; }
-        body.theme-orange .modal-close { background: transparent; color: #7a5a3a; border-color: #f0c8a0; }
-        body.theme-orange .modal-close:hover { background: #ffecd9; }
-        body.theme-orange { font-family: Tahoma, Geneva, sans-serif; }
-
-        /* ----- Yeşil Tema ----- */
-        body.theme-green {
-            background: #f0fff0;
-            color: #1a3a1a;
-        }
-        body.theme-green header,
-        body.theme-green nav,
-        body.theme-green .sidebar,
-        body.theme-green .sidebar-section {
-            background: #e0f5e0;
-            border-color: #a0d0a0;
-        }
-        body.theme-green .channel-item {
-            background: #fafffa;
-            border-color: #a0d0a0;
-            color: #1a3a1a;
-        }
-        body.theme-green .channel-item:hover {
-            background: #e0f5e0;
-        }
-        body.theme-green .tab.active {
-            background: #27ae60;
-            color: #fff;
-        }
-        body.theme-green .tab.inactive {
-            background: #fafffa;
-            color: #2a5a2a;
-            border-color: #a0d0a0;
-        }
-        body.theme-green .tab.inactive:hover {
-            background: #e0f5e0;
-        }
-        body.theme-green .badge {
-            background: #e0f5e0;
-            color: #1a3a1a;
-            border-color: #a0d0a0;
-        }
-        body.theme-green .badge-primary {
-            background: #27ae60;
-            color: #fff;
-            border-color: #27ae60;
-        }
-        body.theme-green .badge-success {
-            background: #2ecc71;
-            color: #fff;
-            border-color: #2ecc71;
-        }
-        body.theme-green .badge-warning {
-            background: #f1c40f;
+        body.theme-dark .modal-btn {
+            background: #ff9800;
             color: #000;
-            border-color: #f1c40f;
         }
-        body.theme-green .badge-danger {
-            background: #e74c3c;
+        body.theme-dark .modal-btn:hover {
+            background: #ffb74d;
+        }
+        body.theme-dark .modal-close {
+            color: #aaa;
+            border-color: #555;
+        }
+        body.theme-dark .modal-close:hover {
             color: #fff;
-            border-color: #e74c3c;
+            border-color: #888;
         }
-        body.theme-green .season-header {
-            background: #e0f5e0;
-            color: #27ae60;
-            border-left-color: #27ae60;
+        /* Koyu tema font */
+        body.theme-dark {
+            font-family: Verdana, Geneva, sans-serif;
         }
-        body.theme-green .episode-item {
-            background: #fafffa;
-            border-color: #a0d0a0;
-            color: #1a3a1a;
-        }
-        body.theme-green .episode-item:hover {
-            background: #e0f5e0;
-            border-color: #27ae60;
-        }
-        body.theme-green .modal-content {
-            background: #fafffa;
-            border-color: #a0d0a0;
-            color: #1a3a1a;
-        }
-        body.theme-green #episodesModal .modal-content {
-            background: #fafffa;
-        }
-        body.theme-green #episodesModal .modal-header {
-            background: #fafffa;
-            border-bottom-color: #a0d0a0;
-        }
-        body.theme-green .panel-item {
-            background: #fafffa;
-            border-color: #a0d0a0;
-            color: #1a3a1a;
-        }
-        body.theme-green .panel-item.active {
-            background: #e0f5e0;
-            border-color: #27ae60;
-        }
-        body.theme-green .panel-item .pi-name { color: #1a3a1a; }
-        body.theme-green .panel-item .pi-user { color: #27ae60; }
-        body.theme-green .panel-item .pi-del { color: #e74c3c; }
-        body.theme-green input, body.theme-green select {
-            background: #fafffa;
-            color: #1a3a1a;
-            border-color: #a0d0a0;
-        }
-        body.theme-green input:focus, body.theme-green select:focus {
-            border-color: #27ae60;
-            box-shadow: 0 0 0 3px rgba(39,174,96,0.2);
-        }
-        body.theme-green .notification {
-            background: #fafffa;
-            color: #1a3a1a;
-            border-color: #a0d0a0;
-        }
-        body.theme-green .notification.success { border-left-color: #2ecc71; }
-        body.theme-green .notification.error { border-left-color: #e74c3c; }
-        body.theme-green .notification.info { border-left-color: #27ae60; }
-        body.theme-green .notification.warning { border-left-color: #f1c40f; }
-        body.theme-green .btn-secondary {
-            background: #e0f5e0;
-            color: #1a3a1a;
-            border-color: #a0d0a0;
-        }
-        body.theme-green .btn-secondary:hover {
-            background: #c0e0c0;
-        }
-        body.theme-green .btn-primary {
-            background: #27ae60;
-            border-color: #27ae60;
-            color: #fff;
-        }
-        body.theme-green .btn-primary:hover {
-            background: #1e8449;
-        }
-        body.theme-green .btn-success {
-            background: #2ecc71;
-            border-color: #2ecc71;
-        }
-        body.theme-green .btn-danger {
-            background: #e74c3c;
-            border-color: #e74c3c;
-        }
-        body.theme-green .modal-btn { background: #27ae60; color: #fff; }
-        body.theme-green .modal-btn:hover { background: #1e8449; }
-        body.theme-green .modal-close { background: transparent; color: #2a5a2a; border-color: #a0d0a0; }
-        body.theme-green .modal-close:hover { background: #e0f5e0; }
-        body.theme-green { font-family: Georgia, 'Times New Roman', serif; }
 
-        /* ----- Kırmızı Tema ----- */
-        body.theme-red {
-            background: #fff0f0;
-            color: #3d1a1a;
-        }
-        body.theme-red header,
-        body.theme-red nav,
-        body.theme-red .sidebar,
-        body.theme-red .sidebar-section {
-            background: #fde0e0;
-            border-color: #e0a0a0;
-        }
-        body.theme-red .channel-item {
-            background: #fffafa;
-            border-color: #e0a0a0;
-            color: #3d1a1a;
-        }
-        body.theme-red .channel-item:hover {
-            background: #fde0e0;
-        }
-        body.theme-red .tab.active {
-            background: #e74c3c;
-            color: #fff;
-        }
-        body.theme-red .tab.inactive {
-            background: #fffafa;
-            color: #5a2a2a;
-            border-color: #e0a0a0;
-        }
-        body.theme-red .tab.inactive:hover {
-            background: #fde0e0;
-        }
-        body.theme-red .badge {
-            background: #fde0e0;
-            color: #3d1a1a;
-            border-color: #e0a0a0;
-        }
-        body.theme-red .badge-primary {
-            background: #e74c3c;
-            color: #fff;
-            border-color: #e74c3c;
-        }
-        body.theme-red .badge-success {
-            background: #2ecc71;
-            color: #fff;
-            border-color: #2ecc71;
-        }
-        body.theme-red .badge-warning {
-            background: #f1c40f;
-            color: #000;
-            border-color: #f1c40f;
-        }
-        body.theme-red .badge-danger {
-            background: #c0392b;
-            color: #fff;
-            border-color: #c0392b;
-        }
-        body.theme-red .season-header {
-            background: #fde0e0;
-            color: #e74c3c;
-            border-left-color: #e74c3c;
-        }
-        body.theme-red .episode-item {
-            background: #fffafa;
-            border-color: #e0a0a0;
-            color: #3d1a1a;
-        }
-        body.theme-red .episode-item:hover {
-            background: #fde0e0;
-            border-color: #e74c3c;
-        }
-        body.theme-red .modal-content {
-            background: #fffafa;
-            border-color: #e0a0a0;
-            color: #3d1a1a;
-        }
-        body.theme-red #episodesModal .modal-content {
-            background: #fffafa;
-        }
-        body.theme-red #episodesModal .modal-header {
-            background: #fffafa;
-            border-bottom-color: #e0a0a0;
-        }
-        body.theme-red .panel-item {
-            background: #fffafa;
-            border-color: #e0a0a0;
-            color: #3d1a1a;
-        }
-        body.theme-red .panel-item.active {
-            background: #fde0e0;
-            border-color: #e74c3c;
-        }
-        body.theme-red .panel-item .pi-name { color: #3d1a1a; }
-        body.theme-red .panel-item .pi-user { color: #e74c3c; }
-        body.theme-red .panel-item .pi-del { color: #c0392b; }
-        body.theme-red input, body.theme-red select {
-            background: #fffafa;
-            color: #3d1a1a;
-            border-color: #e0a0a0;
-        }
-        body.theme-red input:focus, body.theme-red select:focus {
-            border-color: #e74c3c;
-            box-shadow: 0 0 0 3px rgba(231,76,60,0.2);
-        }
-        body.theme-red .notification {
-            background: #fffafa;
-            color: #3d1a1a;
-            border-color: #e0a0a0;
-        }
-        body.theme-red .notification.success { border-left-color: #2ecc71; }
-        body.theme-red .notification.error { border-left-color: #c0392b; }
-        body.theme-red .notification.info { border-left-color: #e74c3c; }
-        body.theme-red .notification.warning { border-left-color: #f1c40f; }
-        body.theme-red .btn-secondary {
-            background: #fde0e0;
-            color: #3d1a1a;
-            border-color: #e0a0a0;
-        }
-        body.theme-red .btn-secondary:hover {
-            background: #f5c0c0;
-        }
-        body.theme-red .btn-primary {
-            background: #e74c3c;
-            border-color: #e74c3c;
-            color: #fff;
-        }
-        body.theme-red .btn-primary:hover {
-            background: #c0392b;
-        }
-        body.theme-red .btn-success {
-            background: #2ecc71;
-            border-color: #2ecc71;
-        }
-        body.theme-red .btn-danger {
-            background: #c0392b;
-            border-color: #c0392b;
-        }
-        body.theme-red .modal-btn { background: #e74c3c; color: #fff; }
-        body.theme-red .modal-btn:hover { background: #c0392b; }
-        body.theme-red .modal-close { background: transparent; color: #5a2a2a; border-color: #e0a0a0; }
-        body.theme-red .modal-close:hover { background: #fde0e0; }
-        body.theme-red { font-family: 'Trebuchet MS', 'Lucida Sans Unicode', sans-serif; }
-
-        /* ----- Mor Tema ----- */
-        body.theme-purple {
-            background: #f5f0ff;
-            color: #2d1a3d;
-        }
-        body.theme-purple header,
-        body.theme-purple nav,
-        body.theme-purple .sidebar,
-        body.theme-purple .sidebar-section {
-            background: #ece0f5;
-            border-color: #c8a0d0;
-        }
-        body.theme-purple .channel-item {
-            background: #fafaff;
-            border-color: #c8a0d0;
-            color: #2d1a3d;
-        }
-        body.theme-purple .channel-item:hover {
-            background: #ece0f5;
-        }
-        body.theme-purple .tab.active {
-            background: #8e44ad;
-            color: #fff;
-        }
-        body.theme-purple .tab.inactive {
-            background: #fafaff;
-            color: #4a2a5a;
-            border-color: #c8a0d0;
-        }
-        body.theme-purple .tab.inactive:hover {
-            background: #ece0f5;
-        }
-        body.theme-purple .badge {
-            background: #ece0f5;
-            color: #2d1a3d;
-            border-color: #c8a0d0;
-        }
-        body.theme-purple .badge-primary {
-            background: #8e44ad;
-            color: #fff;
-            border-color: #8e44ad;
-        }
-        body.theme-purple .badge-success {
-            background: #27ae60;
-            color: #fff;
-            border-color: #27ae60;
-        }
-        body.theme-purple .badge-warning {
-            background: #f1c40f;
-            color: #000;
-            border-color: #f1c40f;
-        }
-        body.theme-purple .badge-danger {
-            background: #e74c3c;
-            color: #fff;
-            border-color: #e74c3c;
-        }
-        body.theme-purple .season-header {
-            background: #ece0f5;
-            color: #8e44ad;
-            border-left-color: #8e44ad;
-        }
-        body.theme-purple .episode-item {
-            background: #fafaff;
-            border-color: #c8a0d0;
-            color: #2d1a3d;
-        }
-        body.theme-purple .episode-item:hover {
-            background: #ece0f5;
-            border-color: #8e44ad;
-        }
-        body.theme-purple .modal-content {
-            background: #fafaff;
-            border-color: #c8a0d0;
-            color: #2d1a3d;
-        }
-        body.theme-purple #episodesModal .modal-content {
-            background: #fafaff;
-        }
-        body.theme-purple #episodesModal .modal-header {
-            background: #fafaff;
-            border-bottom-color: #c8a0d0;
-        }
-        body.theme-purple .panel-item {
-            background: #fafaff;
-            border-color: #c8a0d0;
-            color: #2d1a3d;
-        }
-        body.theme-purple .panel-item.active {
-            background: #ece0f5;
-            border-color: #8e44ad;
-        }
-        body.theme-purple .panel-item .pi-name { color: #2d1a3d; }
-        body.theme-purple .panel-item .pi-user { color: #8e44ad; }
-        body.theme-purple .panel-item .pi-del { color: #e74c3c; }
-        body.theme-purple input, body.theme-purple select {
-            background: #fafaff;
-            color: #2d1a3d;
-            border-color: #c8a0d0;
-        }
-        body.theme-purple input:focus, body.theme-purple select:focus {
-            border-color: #8e44ad;
-            box-shadow: 0 0 0 3px rgba(142,68,173,0.2);
-        }
-        body.theme-purple .notification {
-            background: #fafaff;
-            color: #2d1a3d;
-            border-color: #c8a0d0;
-        }
-        body.theme-purple .notification.success { border-left-color: #27ae60; }
-        body.theme-purple .notification.error { border-left-color: #e74c3c; }
-        body.theme-purple .notification.info { border-left-color: #8e44ad; }
-        body.theme-purple .notification.warning { border-left-color: #f1c40f; }
-        body.theme-purple .btn-secondary {
-            background: #ece0f5;
-            color: #2d1a3d;
-            border-color: #c8a0d0;
-        }
-        body.theme-purple .btn-secondary:hover {
-            background: #dcc0e5;
-        }
-        body.theme-purple .btn-primary {
-            background: #8e44ad;
-            border-color: #8e44ad;
-            color: #fff;
-        }
-        body.theme-purple .btn-primary:hover {
-            background: #7d3c98;
-        }
-        body.theme-purple .btn-success {
-            background: #27ae60;
-            border-color: #27ae60;
-        }
-        body.theme-purple .btn-danger {
-            background: #e74c3c;
-            border-color: #e74c3c;
-        }
-        body.theme-purple .modal-btn { background: #8e44ad; color: #fff; }
-        body.theme-purple .modal-btn:hover { background: #7d3c98; }
-        body.theme-purple .modal-close { background: transparent; color: #4a2a5a; border-color: #c8a0d0; }
-        body.theme-purple .modal-close:hover { background: #ece0f5; }
-        body.theme-purple { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-
-        /* ===== SİSTEM TEMASI (prefers-color-scheme) ===== */
+        /* ----- SİSTEM TEMASI (otomatik) ----- */
         @media (prefers-color-scheme: dark) {
             body.theme-system {
-                background: #0d1117;
-                color: #c9d1d9;
+                background: #12121e;
+                color: #e0e0e0;
             }
-            body.theme-system header,
-            body.theme-system nav,
-            body.theme-system .sidebar,
-            body.theme-system .sidebar-section {
-                background: #161b22;
-                border-color: #30363d;
-            }
-            body.theme-system .channel-item {
-                background: #161b22;
-                border-color: #30363d;
-                color: #c9d1d9;
-            }
-            body.theme-system .channel-item:hover {
-                background: #1c2128;
-            }
-            body.theme-system .tab.active {
-                background: #ff9800;
-                color: #000;
-            }
-            body.theme-system .tab.inactive {
-                background: #21262d;
-                color: #8b949e;
-                border-color: #30363d;
-            }
-            body.theme-system .tab.inactive:hover {
-                background: #30363d;
-            }
-            body.theme-system .badge {
-                background: #21262d;
-                color: #c9d1d9;
-                border-color: #30363d;
-            }
-            body.theme-system .badge-primary {
-                background: #ff9800;
-                color: #000;
-                border-color: #ff9800;
-            }
-            body.theme-system .badge-success {
-                background: #2ea043;
-                color: #fff;
-                border-color: #2ea043;
-            }
-            body.theme-system .badge-warning {
-                background: #d29922;
-                color: #000;
-                border-color: #d29922;
-            }
-            body.theme-system .badge-danger {
-                background: #f44336;
-                color: #fff;
-                border-color: #f44336;
-            }
-            body.theme-system .season-header {
-                background: #21262d;
-                color: #ff9800;
-                border-left-color: #ff9800;
-            }
-            body.theme-system .episode-item {
-                background: #161b22;
-                border-color: #30363d;
-                color: #c9d1d9;
-            }
-            body.theme-system .episode-item:hover {
-                background: #1c2128;
-                border-color: #ff9800;
-            }
-            body.theme-system .modal-content {
-                background: #161b22;
-                border-color: #30363d;
-                color: #c9d1d9;
-            }
-            body.theme-system #episodesModal .modal-content {
-                background: #161b22;
-            }
-            body.theme-system #episodesModal .modal-header {
-                background: #161b22;
-                border-bottom-color: #30363d;
-            }
-            body.theme-system .panel-item {
-                background: #161b22;
-                border-color: #30363d;
-                color: #c9d1d9;
-            }
-            body.theme-system .panel-item.active {
-                background: #21262d;
-                border-color: #ff9800;
-            }
-            body.theme-system .panel-item .pi-name { color: #f0f6fc; }
-            body.theme-system .panel-item .pi-user { color: #ff9800; }
-            body.theme-system .panel-item .pi-del { color: #f44336; }
-            body.theme-system input, body.theme-system select {
-                background: #0d1117;
-                color: #c9d1d9;
-                border-color: #30363d;
-            }
-            body.theme-system input:focus, body.theme-system select:focus {
-                border-color: #ff9800;
-                box-shadow: 0 0 0 3px rgba(255,152,0,0.2);
-            }
-            body.theme-system .notification {
-                background: #161b22;
-                color: #c9d1d9;
-                border-color: #30363d;
-            }
-            body.theme-system .notification.success { border-left-color: #2ea043; }
+            /* Aynı koyu tema stilleri (kopyala) */
+            body.theme-system header { background: #1a1a2e; border-bottom-color: #333; }
+            body.theme-system header .badge { background: #333; color: #ddd; border-color: #555; }
+            body.theme-system header .badge-primary { background: #ff9800; color: #000; border-color: #ff9800; }
+            body.theme-system header .badge-success { background: #4caf50; color: #fff; border-color: #4caf50; }
+            body.theme-system nav { background: #1a1a2e; border-bottom-color: #333; }
+            body.theme-system .tab.active { background: #ff9800; color: #000; }
+            body.theme-system .tab.inactive { background: #333; color: #aaa; border-color: #555; }
+            body.theme-system .tab.inactive:hover { background: #444; }
+            body.theme-system .sidebar { background: #1a1a2e; border-right-color: #333; }
+            body.theme-system .sidebar-section { background: #1a1a2e; border-bottom-color: #333; }
+            body.theme-system .sidebar-item { color: #ddd; }
+            body.theme-system .sidebar-item.focused { background: rgba(255,152,0,0.15); border-left-color: #ff9800; }
+            body.theme-system .app-categories { background: #1a1a2e; border-right-color: #333; }
+            body.theme-system .app-categories h3 { color: #ff9800; border-bottom-color: #333; }
+            body.theme-system .app-categories .sidebar-item { color: #ccc; }
+            body.theme-system .app-categories .sidebar-item.focused { background: rgba(255,152,0,0.12); border-left-color: #ff9800; }
+            body.theme-system .channels-list { background: #12121e; }
+            body.theme-system .channel-item { background: #1e1e32; border-color: #333; color: #ddd; }
+            body.theme-system .channel-item:hover { background: #2a2a4a; }
+            body.theme-system .channel-item.focused { border-color: #ff9800; box-shadow: 0 0 0 2px rgba(255,152,0,0.3); }
+            body.theme-system input, body.theme-system select { background: #2a2a4a; color: #ddd; border-color: #555; }
+            body.theme-system input:focus, body.theme-system select:focus { border-color: #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,0.2); }
+            body.theme-system .modal-content { background: #252545; border-color: #444; color: #e0e0e0; }
+            body.theme-system #episodesModal .modal-content { background: #252545; border-color: #444; }
+            body.theme-system #episodesModal .modal-header { background: #252545; border-bottom-color: #444; }
+            body.theme-system #episodesModal .modal-header .close-btn { color: #aaa; }
+            body.theme-system #episodesModal .modal-header .close-btn:hover { color: #fff; }
+            body.theme-system .season-header { background: #333; color: #ff9800; border-left-color: #ff9800; }
+            body.theme-system .episode-item { background: #2a2a4a; border-color: #444; color: #ddd; }
+            body.theme-system .episode-item:hover { background: #3a3a5a; border-color: #ff9800; }
+            body.theme-system .btn-secondary { background: #333; color: #ddd; border-color: #555; }
+            body.theme-system .btn-secondary:hover { background: #444; }
+            body.theme-system .btn-primary { background: #ff9800; border-color: #ff9800; color: #000; }
+            body.theme-system .btn-primary:hover { background: #ffb74d; }
+            body.theme-system .btn-success { background: #4caf50; border-color: #4caf50; }
+            body.theme-system .btn-danger { background: #f44336; border-color: #f44336; }
+            body.theme-system .notification { background: #252545; color: #ddd; border-color: #444; }
+            body.theme-system .notification.success { border-left-color: #4caf50; }
             body.theme-system .notification.error { border-left-color: #f44336; }
             body.theme-system .notification.info { border-left-color: #ff9800; }
-            body.theme-system .notification.warning { border-left-color: #d29922; }
-            body.theme-system .btn-secondary {
-                background: #21262d;
-                color: #c9d1d9;
-                border-color: #30363d;
-            }
-            body.theme-system .btn-secondary:hover {
-                background: #30363d;
-            }
-            body.theme-system .btn-primary {
-                background: #ff9800;
-                border-color: #ff9800;
-                color: #000;
-            }
-            body.theme-system .btn-primary:hover {
-                background: #ffb74d;
-            }
-            body.theme-system .btn-success {
-                background: #2ea043;
-                border-color: #2ea043;
-            }
-            body.theme-system .btn-danger {
-                background: #f44336;
-                border-color: #f44336;
-            }
+            body.theme-system .notification.warning { border-left-color: #ffc107; }
+            body.theme-system .panel-item { background: #252545; border-color: #444; color: #ddd; }
+            body.theme-system .panel-item.active { background: #3a3a5a; border-color: #ff9800; }
+            body.theme-system .panel-item .pi-name { color: #fff; }
+            body.theme-system .panel-item .pi-user { color: #ff9800; }
+            body.theme-system .panel-item .pi-del { color: #f44336; }
             body.theme-system .modal-btn { background: #ff9800; color: #000; }
             body.theme-system .modal-btn:hover { background: #ffb74d; }
-            body.theme-system .modal-close { background: transparent; color: #8b949e; border-color: #30363d; }
-            body.theme-system .modal-close:hover { background: #21262d; color: #c9d1d9; }
+            body.theme-system .modal-close { color: #aaa; border-color: #555; }
+            body.theme-system .modal-close:hover { color: #fff; border-color: #888; }
             body.theme-system { font-family: Verdana, Geneva, sans-serif; }
         }
-
-        @media (prefers-color-scheme: light) {
-            body.theme-system {
-                background: #ffffff;
-                color: #24292f;
-            }
-            body.theme-system header,
-            body.theme-system nav,
-            body.theme-system .sidebar,
-            body.theme-system .sidebar-section {
-                background: #ffffff;
-                border-color: #d0d7de;
-            }
-            body.theme-system .channel-item {
-                background: #ffffff;
-                border-color: #d0d7de;
-                color: #24292f;
-            }
-            body.theme-system .channel-item:hover {
-                background: #f6f8fa;
-            }
-            body.theme-system .tab.active {
-                background: #0969da;
-                color: white;
-            }
-            body.theme-system .tab.inactive {
-                background: white;
-                color: #57606a;
-                border-color: #d0d7de;
-            }
-            body.theme-system .tab.inactive:hover {
-                background: #f6f8fa;
-            }
-            body.theme-system .badge {
-                background: #f6f8fa;
-                color: #24292f;
-                border-color: #d0d7de;
-            }
-            body.theme-system .badge-primary {
-                background: #ddf4ff;
-                color: #0969da;
-                border-color: #c1dff8;
-            }
-            body.theme-system .badge-success {
-                background: #dafbe1;
-                color: #1a7f37;
-                border-color: #c2e8ce;
-            }
-            body.theme-system .badge-warning {
-                background: #fff8c5;
-                color: #9a6700;
-                border-color: #f4e8aa;
-            }
-            body.theme-system .badge-danger {
-                background: #ffebe9;
-                color: #cf222e;
-                border-color: #ffd8d3;
-            }
-            body.theme-system .season-header {
-                background: #f6f8fa;
-                color: #1a1a2e;
-                border-left-color: #0969da;
-            }
-            body.theme-system .episode-item {
-                background: white;
-                border-color: #e1e4e8;
-                color: #24292f;
-            }
-            body.theme-system .episode-item:hover {
-                background: #f6f8fa;
-                border-color: #0969da;
-            }
-            body.theme-system .modal-content {
-                background: white;
-                border-color: #d0d7de;
-                color: #24292f;
-            }
-            body.theme-system #episodesModal .modal-content {
-                background: #fff;
-            }
-            body.theme-system #episodesModal .modal-header {
-                background: #fff;
-                border-bottom-color: #f0f0f0;
-            }
-            body.theme-system .panel-item {
-                background: white;
-                border-color: #d0d7de;
-                color: #24292f;
-            }
-            body.theme-system .panel-item.active {
-                background: #ddf4ff;
-                border-color: #0969da;
-            }
-            body.theme-system .panel-item .pi-name { color: #24292f; }
-            body.theme-system .panel-item .pi-user { color: #0969da; }
-            body.theme-system .panel-item .pi-del { color: #cf222e; }
-            body.theme-system input, body.theme-system select {
-                background: #ffffff;
-                color: #24292f;
-                border-color: #d0d7de;
-            }
-            body.theme-system input:focus, body.theme-system select:focus {
-                border-color: #0969da;
-                box-shadow: 0 0 0 3px rgba(9,105,218,0.1);
-            }
-            body.theme-system .notification {
-                background: #ffffff;
-                color: #24292f;
-                border-color: #d0d7de;
-            }
-            body.theme-system .notification.success { border-left-color: #1a7f37; }
-            body.theme-system .notification.error { border-left-color: #cf222e; }
-            body.theme-system .notification.info { border-left-color: #0969da; }
-            body.theme-system .notification.warning { border-left-color: #bf8700; }
-            body.theme-system .btn-secondary {
-                background: #f6f8fa;
-                color: #24292f;
-                border-color: #d0d7de;
-            }
-            body.theme-system .btn-secondary:hover {
-                background: #f3f4f6;
-                border-color: #afb8c1;
-            }
-            body.theme-system .btn-primary {
-                background: #0969da;
-                border-color: #0969da;
-                color: white;
-            }
-            body.theme-system .btn-primary:hover {
-                background: #0860ca;
-                border-color: #0860ca;
-            }
-            body.theme-system .btn-success {
-                background: #1a7f37;
-                border-color: #1a7f37;
-            }
-            body.theme-system .btn-danger {
-                background: #cf222e;
-                border-color: #cf222e;
-            }
-            body.theme-system .modal-btn { background: #0969da; color: white; }
-            body.theme-system .modal-btn:hover { background: #0860ca; }
-            body.theme-system .modal-close { background: transparent; color: #57606a; border-color: #d0d7de; }
-            body.theme-system .modal-close:hover { background: #f6f8fa; }
-            body.theme-system { font-family: Arial, Helvetica, sans-serif; }
+        /* Sistem teması açık modda (varsayılan) */
+        body.theme-system {
+            /* varsayılan açık tema zaten mevcut, sadece font değişebilir */
+            font-family: Arial, Helvetica, sans-serif;
         }
 
         /* ===== DİĞER MEVCUT STİLLER (KISALTILMIŞ) ===== */
@@ -1361,7 +516,28 @@
         .theme-option:hover { transform: scale(1.1); }
         .theme-option.active { border-color: #000; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000; }
         body.theme-dark .theme-option.active { border-color: #fff; box-shadow: 0 0 0 2px #000, 0 0 0 4px #fff; }
-        body.theme-system .theme-option.active { border-color: #000; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000; }
+
+        /* Ayar butonu sağ üst */
+        #settingsHeaderBtn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #888;
+            color: #24292f;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.15s;
+        }
+        #settingsHeaderBtn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        body.theme-dark #settingsHeaderBtn {
+            color: #ddd;
+            border-color: #666;
+        }
+        body.theme-dark #settingsHeaderBtn:hover {
+            background: rgba(255,255,255,0.1);
+        }
     </style>
 </head>
 <body>
@@ -1437,8 +613,8 @@
                     <button type="button" id="shareBtn" class="btn btn-primary">Paylaş</button>
                     <button type="button" id="favBtn" class="btn btn-success">Favoriler <span id="favCount" class="badge-success">0</span></button>
                     <button type="button" id="logoutBtn" class="btn btn-danger">Çıkış Yap</button>
-                    <!-- AYAR BUTONU SAĞ ÜSTTE -->
-                    <button type="button" id="settingsBtn" class="btn btn-secondary" onclick="openSettingsModal()" style="font-size:20px; padding:6px 14px;">⚙️</button>
+                    <!-- Ayar butonu sağ üst -->
+                    <button type="button" id="settingsHeaderBtn" onclick="openSettingsModal()">⚙️</button>
                 </div>
             </div>
         </header>
@@ -1537,13 +713,9 @@
             <div style="margin-bottom:20px;">
                 <h3>🎨 Tema Seçimi</h3>
                 <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;">
-                    <span class="theme-option" style="background:#0969da;" data-theme="default" onclick="applyTheme('default')" title="Varsayılan (Açık)"></span>
+                    <span class="theme-option" style="background:#ffffff; border:2px solid #ccc;" data-theme="default" onclick="applyTheme('default')" title="Varsayılan (Açık)"></span>
                     <span class="theme-option" style="background:#1a1a2e;" data-theme="dark" onclick="applyTheme('dark')" title="Koyu"></span>
-                    <span class="theme-option" style="background:#e67e22;" data-theme="orange" onclick="applyTheme('orange')" title="Turuncu"></span>
-                    <span class="theme-option" style="background:#27ae60;" data-theme="green" onclick="applyTheme('green')" title="Yeşil"></span>
-                    <span class="theme-option" style="background:#e74c3c;" data-theme="red" onclick="applyTheme('red')" title="Kırmızı"></span>
-                    <span class="theme-option" style="background:#8e44ad;" data-theme="purple" onclick="applyTheme('purple')" title="Mor"></span>
-                    <span class="theme-option" style="background:linear-gradient(135deg,#000,#fff);" data-theme="system" onclick="applyTheme('system')" title="Sistem (Cihaz temasına göre)"></span>
+                    <span class="theme-option" style="background:linear-gradient(135deg,#ffffff 50%,#1a1a2e 50%);" data-theme="system" onclick="applyTheme('system')" title="Sistem (Otomatik)"></span>
                 </div>
             </div>
             <div style="text-align:right;">
@@ -1555,12 +727,12 @@
     <script>
         // ------------------------------------------------
         // ES5 Uyumlu, LG Kumanda Desteği, HLS.js v0.14.17
-        // TEMA SEÇENEKLİ - TÜM UI RENKLERİ DEĞİŞİYOR
+        // TEMA SEÇENEKLİ SÜRÜM - TÜM UI RENKLERİ DEĞİŞİR
         // ------------------------------------------------
 
         // ----- TEMA FONKSİYONLARI (GLOBAL) -----
         function applyTheme(themeName) {
-            var themes = ['default', 'dark', 'orange', 'green', 'red', 'purple', 'system'];
+            var themes = ['default', 'dark', 'system'];
             for (var i = 0; i < themes.length; i++) {
                 document.body.classList.remove('theme-' + themes[i]);
             }
@@ -1582,8 +754,7 @@
             if (saved) {
                 applyTheme(saved);
             } else {
-                // Varsayılan tema default
-                document.body.classList.remove('theme-dark', 'theme-orange', 'theme-green', 'theme-red', 'theme-purple', 'theme-system');
+                document.body.classList.remove('theme-dark', 'theme-system');
                 var options = document.querySelectorAll('.theme-option');
                 for (var i = 0; i < options.length; i++) {
                     options[i].classList.toggle('active', options[i].getAttribute('data-theme') === 'default');
@@ -1599,7 +770,7 @@
             document.getElementById('settingsModal').classList.remove('active');
         }
 
-        // ----- app nesnesi -----
+        // ----- app nesnesi (aynı, oynatma kodlarına dokunulmadı) -----
         var app = {};
 
         // ----- Yardımcı fonksiyonlar (ES5) -----
@@ -1793,6 +964,8 @@
                 self.changeCategory(e.target.value);
             });
 
+            // Ayar butonu zaten header'da var, onclick ile çağırıyor
+
             var tabs = document.querySelectorAll('.tab');
             for (var i = 0; i < tabs.length; i++) {
                 (function(btn) {
@@ -1811,7 +984,7 @@
             document.getElementById(id).classList.remove('active');
         };
 
-        // ----- Diğer mevcut fonksiyonlar (kısaltıldı, aynı mantık) -----
+        // ----- Diğer mevcut fonksiyonlar (aynı, oynatma kodları değişmedi) -----
         app.cleanPanels = function() {
             var changed = false;
             var panels = [];
@@ -2332,7 +1505,7 @@
             document.getElementById('channelsList').innerHTML = html;
         };
 
-        // ----- DİZİ BÖLÜMLERİ -----
+        // ----- DİZİ BÖLÜMLERİ (modal düzeltilmiş) -----
         app.showEpisodes = function(series) {
             var self = this;
             try {
