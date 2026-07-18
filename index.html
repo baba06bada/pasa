@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ÖZKAN IPTV PLAYER</title>
+    <!-- HLS.js eski sürüm (Chrome 34 uyumlu) -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js"></script>
     <style>
-        /* (Stiller aynı) */
+        /* (Stiller aynı, sadece odak yönetimi için eklentiler) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #ffffff; color: #24292f; line-height: 1.5; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 35, 40, 0.7); z-index: 1000; align-items: center; justify-content: center; }
@@ -97,10 +98,8 @@
         .skeleton.w-25 { width: 25%; }
         .load-more { width: 100%; padding: 12px; background: #f6f8fa; border: 1px solid #d0d7de; border-radius: 6px; cursor: pointer; text-align: center; transition: all 0.15s; margin-top: 8px; }
         .load-more:hover { background: #f3f4f6; }
-        .season-header { background: #f6f8fa; padding: 12px; border-radius: 6px; margin-bottom: 8px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
-        .season-header:hover { background: #eaeef2; }
-        .season-header .arrow { float: right; font-size: 18px; }
-        .episode-item { background: white; border-radius: 6px; padding: 16px; margin-bottom: 8px; border: 1px solid #d0d7de; cursor: pointer; transition: all 0.15s; margin-left: 16px; }
+        .season-header { background: #f6f8fa; padding: 12px; border-radius: 6px; margin-bottom: 8px; font-weight: 600; }
+        .episode-item { background: white; border-radius: 6px; padding: 16px; margin-bottom: 8px; border: 1px solid #d0d7de; cursor: pointer; transition: all 0.15s; }
         .episode-item:hover { background: #f6f8fa; border-color: #0969da; }
         .episode-item.focused { border-color: #0969da; box-shadow: 0 0 0 2px #0969da; }
         .close-btn { background: none; border: none; font-size: 32px; color: #57606a; cursor: pointer; padding: 0; line-height: 1; }
@@ -117,9 +116,6 @@
         .panel-item.active { background: #ddf4ff; border-color: #0969da; font-weight: 600; }
         .panel-item.focused { border-color: #0969da; box-shadow: 0 0 0 2px #0969da; }
         .panel-list-container { height: 100%; overflow-y: auto; }
-        .debug-box { background: #f6f8fa; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; border: 1px solid #d0d7de; margin-top: 12px; }
-        .episode-loading { text-align: center; padding: 16px; color: #57606a; }
-        .season-episodes { margin-left: 16px; border-left: 2px solid #d0d7de; padding-left: 8px; }
         @media (min-width: 1024px) { .container { flex-direction: row; } .sidebar { width: 384px; } }
         @media (max-width: 768px) { .header-content { flex-direction: column; } .tabs { flex-wrap: wrap; } .flex { flex-direction: column; } .panel-list { border-right: none !important; padding-right: 0 !important; } .panel-form { padding-left: 0 !important; } }
     </style>
@@ -245,10 +241,6 @@
                 <button type="button" id="closeEpisodes" class="close-btn">&times;</button>
             </div>
             <div id="episodesList" class="flex-1 scrollable"></div>
-            <div id="debugContainer" style="margin-top: 12px; border-top: 1px solid #d0d7de; padding-top: 12px;">
-                <p class="text-small">📋 Ham Veri (tam yanıt):</p>
-                <div id="debugData" class="debug-box" style="max-height: 300px;"></div>
-            </div>
         </div>
     </div>
 
@@ -292,35 +284,30 @@
     </div>
 
     <script>
-        // ============================================================
-        //  SON ÇÖZÜM - 3 FARKLI YÖNTEM DENE, TAM DEBUG
-        // ============================================================
+        // ------------------------------------------------
+        // ES5 Uyumlu, LG Kumanda Desteği, HLS.js v0.14.17
+        // ORİJİNAL KOD - SADECE UYUMLULUK DÜZELTMELERİ
+        // ------------------------------------------------
 
         var app = {};
 
-        // ----- HTTP istekleri (XMLHttpRequest) -----
+        // ----- Yardımcı fonksiyonlar (ES5) -----
         function httpRequest(method, url, callback, errback) {
             var xhr = new XMLHttpRequest();
             xhr.open(method, url, true);
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
-                    try {
-                        if (xhr.status >= 200 && xhr.status < 300) {
-                            if (typeof callback === 'function') callback(xhr.responseText);
-                            else console.error('httpRequest: callback fonksiyon değil');
-                        } else {
-                            if (typeof errback === 'function') errback(xhr.statusText || 'HTTP Error ' + xhr.status);
-                            else console.error('httpRequest: errback fonksiyon değil');
-                        }
-                    } catch (e) {
-                        console.error('httpRequest onreadystatechange hatası:', e);
-                        if (typeof errback === 'function') errback(e.message);
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        callback(xhr.responseText);
+                    } else {
+                        if (errback) errback(xhr.statusText);
+                        else console.error('HTTP Error:', xhr.statusText);
                     }
                 }
             };
             xhr.onerror = function() {
-                if (typeof errback === 'function') errback('Network Error');
-                else console.error('httpRequest: Network Error');
+                if (errback) errback('Network Error');
+                else console.error('Network Error');
             };
             xhr.send();
         }
@@ -329,47 +316,33 @@
             httpRequest(method, url, function(text) {
                 try {
                     var data = JSON.parse(text);
-                    if (typeof callback === 'function') callback(data);
+                    callback(data);
                 } catch (e) {
-                    console.error('httpRequestJson JSON parse hatası:', e);
-                    if (typeof errback === 'function') errback('JSON Parse Error: ' + e.message);
+                    if (errback) errback('JSON Parse Error: ' + e.message);
+                    else console.error('JSON Parse Error:', e);
                 }
             }, errback);
         }
 
-        // ----- Veri çıkarıcı (güvenli) -----
-        function extractChannels(data) {
-            try {
-                if (!data) return [];
-                if (Array.isArray(data)) return data;
-                if (typeof data !== 'object') return [];
-                var keys = ['streams','data','list','items','channels','epg','series','categories','category','vod_categories','series_categories','live_categories','result','results','response'];
-                for (var i = 0; i < keys.length; i++) {
-                    var key = keys[i];
-                    if (data[key] && Array.isArray(data[key])) return data[key];
-                }
-                for (var prop in data) {
-                    if (data.hasOwnProperty(prop) && Array.isArray(data[prop])) return data[prop];
-                }
-                return [];
-            } catch (e) {
-                console.error('extractChannels hatası:', e);
-                return [];
+        // Basit şifreleme (sadece base64 + _pass kontrolü)
+        function encryptData(text, password) {
+            var obj = {
+                _pass: btoa(password),
+                data: btoa(text)
+            };
+            return btoa(JSON.stringify(obj));
+        }
+
+        function decryptData(encryptedBase64, password) {
+            var json = JSON.parse(atob(encryptedBase64));
+            if (json._pass && atob(json._pass) === password) {
+                return atob(json.data);
+            } else {
+                throw new Error('Yanlış şifre');
             }
         }
 
-        // ----- Basit şifreleme -----
-        function encryptData(text, password) {
-            var obj = { _pass: btoa(password), data: btoa(text) };
-            return btoa(JSON.stringify(obj));
-        }
-        function decryptData(encryptedBase64, password) {
-            var json = JSON.parse(atob(encryptedBase64));
-            if (json._pass && atob(json._pass) === password) return atob(json.data);
-            else throw new Error('Yanlış şifre');
-        }
-
-        // ----- Query string -----
+        // ----- URLSearchParams yedeği (manuel parse) -----
         function getQueryParams() {
             var search = window.location.search.substring(1);
             var params = {};
@@ -377,7 +350,9 @@
                 var pairs = search.split('&');
                 for (var i = 0; i < pairs.length; i++) {
                     var pair = pairs[i].split('=');
-                    if (pair.length === 2) params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+                    if (pair.length === 2) {
+                        params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
+                    }
                 }
             }
             return params;
@@ -402,137 +377,142 @@
             hls: null,
             panels: [],
             selectedPanelId: null,
-            pendingConfig: null,
-            currentSeries: null,
-            loadedSeasons: {}
+            pendingConfig: null
         };
 
         app.init = function() {
-            try {
-                this.loadFavorites();
-                this.loadPanels();
-                this.cleanPanels();
-                this.checkUrl();
-                this.bindEvents();
-                this.renderPanelList();
-                this.bindRemoteKeys();
-                if (typeof Hls !== 'undefined') this.notify('✅ HLS.js hazır.', 'info');
-                else this.notify('⚠️ HLS.js yüklenemedi. Yerel HLS deneniyor.', 'warning');
-            } catch (e) {
-                console.error('init hatası:', e);
-                this.notify('Başlatma hatası: ' + e.message, 'error');
-            }
+            this.loadFavorites();
+            this.loadPanels();
+            this.cleanPanels();
+            this.checkUrl();
+            this.bindEvents();
+            this.renderPanelList();
+            this.bindRemoteKeys();
         };
 
         app.bindRemoteKeys = function() {
             var self = this;
             document.addEventListener('keydown', function(e) {
-                try {
-                    var key = e.keyCode || e.which;
-                    if (key === 27 || key === 8) {
-                        var activeModal = document.querySelector('.modal.active');
-                        if (activeModal) {
-                            var id = activeModal.id;
-                            if (id === 'loginModal') return;
-                            self.closeModal(id);
-                            e.preventDefault();
-                            e.stopPropagation();
-                            return;
-                        }
+                var key = e.keyCode || e.which;
+                if (key === 27 || key === 8) {
+                    var activeModal = document.querySelector('.modal.active');
+                    if (activeModal) {
+                        var id = activeModal.id;
+                        if (id === 'loginModal') return;
+                        self.closeModal(id);
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return;
                     }
-                    var list = document.getElementById('channelsList');
-                    var focused = list ? list.querySelector('.channel-item.focused') : null;
-                    if (key === 40) {
-                        e.preventDefault();
-                        if (focused) {
-                            var next = focused.nextElementSibling;
-                            while (next && !next.classList.contains('channel-item')) next = next.nextElementSibling;
-                            if (next) {
-                                focused.classList.remove('focused');
-                                next.classList.add('focused');
-                                next.scrollIntoView({ block: 'nearest' });
-                            }
-                        } else {
-                            var first = list ? list.querySelector('.channel-item') : null;
-                            if (first) first.classList.add('focused');
+                }
+                var list = document.getElementById('channelsList');
+                var focused = list ? list.querySelector('.channel-item.focused') : null;
+                if (key === 40) {
+                    e.preventDefault();
+                    if (focused) {
+                        var next = focused.nextElementSibling;
+                        while (next && !next.classList.contains('channel-item')) next = next.nextElementSibling;
+                        if (next) {
+                            focused.classList.remove('focused');
+                            next.classList.add('focused');
+                            next.scrollIntoView({ block: 'nearest' });
                         }
-                    } else if (key === 38) {
-                        e.preventDefault();
-                        if (focused) {
-                            var prev = focused.previousElementSibling;
-                            while (prev && !prev.classList.contains('channel-item')) prev = prev.previousElementSibling;
-                            if (prev) {
-                                focused.classList.remove('focused');
-                                prev.classList.add('focused');
-                                prev.scrollIntoView({ block: 'nearest' });
-                            }
-                        } else {
-                            var last = list ? list.querySelector('.channel-item:last-child') : null;
-                            if (last) last.classList.add('focused');
-                        }
-                    } else if (key === 13) {
-                        e.preventDefault();
-                        if (focused) focused.click();
-                        else {
-                            var activeEl = document.activeElement;
-                            if (activeEl && activeEl.click) activeEl.click();
-                        }
+                    } else {
+                        var first = list ? list.querySelector('.channel-item') : null;
+                        if (first) first.classList.add('focused');
                     }
-                } catch (err) {
-                    console.error('bindRemoteKeys hatası:', err);
+                } else if (key === 38) {
+                    e.preventDefault();
+                    if (focused) {
+                        var prev = focused.previousElementSibling;
+                        while (prev && !prev.classList.contains('channel-item')) prev = prev.previousElementSibling;
+                        if (prev) {
+                            focused.classList.remove('focused');
+                            prev.classList.add('focused');
+                            prev.scrollIntoView({ block: 'nearest' });
+                        }
+                    } else {
+                        var last = list ? list.querySelector('.channel-item:last-child') : null;
+                        if (last) last.classList.add('focused');
+                    }
+                } else if (key === 13) {
+                    e.preventDefault();
+                    if (focused) {
+                        focused.click();
+                    } else {
+                        var activeEl = document.activeElement;
+                        if (activeEl && activeEl.click) activeEl.click();
+                    }
                 }
             });
         };
 
         app.bindEvents = function() {
             var self = this;
+
             document.getElementById('newPanelBtn').addEventListener('click', function() { self.newPanel(); });
             document.getElementById('connectBtn').addEventListener('click', function() { self.connectPanel(); });
             document.getElementById('savePanelBtn').addEventListener('click', function() { self.savePanel(); });
             document.getElementById('deletePanelBtn').addEventListener('click', function() { self.deletePanel(); });
-            document.getElementById('passwordForm').addEventListener('submit', function(e) { e.preventDefault(); self.decrypt(e); });
+
+            document.getElementById('passwordForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                self.decrypt(e);
+            });
+
             document.getElementById('logoutBtn').addEventListener('click', function() { self.logout(); });
+
             document.getElementById('shareBtn').addEventListener('click', function() { self.showShare(); });
             document.getElementById('generateBtn').addEventListener('click', function() { self.generateUrl(); });
             document.getElementById('closeShare').addEventListener('click', function() { self.closeModal('shareModal'); });
             document.getElementById('copyBtn').addEventListener('click', function() { self.copyUrl(); });
             document.getElementById('testBtn').addEventListener('click', function() { self.testUrl(); });
             document.getElementById('backBtn').addEventListener('click', function() { self.resetShare(); });
+
             document.getElementById('favBtn').addEventListener('click', function() { self.showFavorites(); });
             document.getElementById('closeFav').addEventListener('click', function() { self.closeModal('favModal'); });
+
             document.getElementById('closeEpisodes').addEventListener('click', function() { self.closeModal('episodesModal'); });
-            document.getElementById('searchInput').addEventListener('input', function(e) { self.handleSearch(e.target.value); });
-            document.getElementById('categorySelect').addEventListener('change', function(e) { self.changeCategory(e.target.value); });
+
+            document.getElementById('searchInput').addEventListener('input', function(e) {
+                self.handleSearch(e.target.value);
+            });
+            document.getElementById('categorySelect').addEventListener('change', function(e) {
+                self.changeCategory(e.target.value);
+            });
+
+            // NodeList.forEach yerine for döngüsü
             var tabs = document.querySelectorAll('.tab');
             for (var i = 0; i < tabs.length; i++) {
                 (function(btn) {
-                    btn.addEventListener('click', function() { self.switchType(btn.dataset.type); });
+                    btn.addEventListener('click', function() {
+                        self.switchType(btn.dataset.type);
+                    });
                 })(tabs[i]);
             }
-            document.getElementById('channelsList').addEventListener('scroll', function() { self.handleScroll(); });
+
+            document.getElementById('channelsList').addEventListener('scroll', function() {
+                self.handleScroll();
+            });
         };
 
         app.cleanPanels = function() {
-            try {
-                var changed = false;
-                var panels = [];
-                for (var i = 0; i < this.state.panels.length; i++) {
-                    var p = this.state.panels[i];
-                    var url = (p.serverUrl || '').toLowerCase();
-                    var name = (p.name || '').toLowerCase();
-                    if (url.indexOf('amazingiptv1.one') === -1 && name !== 'tekno' && name !== 'tt') {
-                        panels.push(p);
-                    } else {
-                        changed = true;
-                    }
+            var changed = false;
+            var panels = [];
+            for (var i = 0; i < this.state.panels.length; i++) {
+                var p = this.state.panels[i];
+                var url = (p.serverUrl || '').toLowerCase();
+                var name = (p.name || '').toLowerCase();
+                if (url.indexOf('amazingiptv1.one') === -1 && name !== 'tekno' && name !== 'tt') {
+                    panels.push(p);
+                } else {
+                    changed = true;
                 }
-                if (changed) {
-                    this.state.panels = panels;
-                    this.savePanels();
-                    this.notify('🔧 İstenmeyen paneller temizlendi.', 'info');
-                }
-            } catch (e) {
-                console.error('cleanPanels hatası:', e);
+            }
+            if (changed) {
+                this.state.panels = panels;
+                this.savePanels();
+                this.notify('🔧 İstenmeyen paneller temizlendi.', 'info');
             }
         };
 
@@ -558,87 +538,78 @@
         };
 
         app.renderPanelList = function() {
-            try {
-                var container = document.getElementById('panelListContainer');
-                if (!container) return;
-                var self = this;
-                if (this.state.panels.length === 0) {
-                    container.innerHTML = '<div class="text-small" style="padding: 12px; color: #57606a;">Henüz panel eklenmemiş.</div>';
-                    return;
-                }
-                var html = '';
-                for (var i = 0; i < this.state.panels.length; i++) {
-                    var p = this.state.panels[i];
-                    var active = (p.id === this.state.selectedPanelId) ? 'active' : '';
-                    var name = p.name || p.serverUrl.replace(/^https?:\/\//, '');
-                    html += '<div class="panel-item ' + active + '" data-id="' + p.id + '">' + this.escape(name) + '</div>';
-                }
-                container.innerHTML = html;
-                var items = container.querySelectorAll('.panel-item');
-                for (var j = 0; j < items.length; j++) {
-                    (function(el) {
-                        el.addEventListener('click', function() { self.selectPanel(el.dataset.id); });
-                    })(items[j]);
-                }
-            } catch (e) {
-                console.error('renderPanelList hatası:', e);
+            var container = document.getElementById('panelListContainer');
+            if (!container) return;
+            var self = this;
+            if (this.state.panels.length === 0) {
+                container.innerHTML = '<div class="text-small" style="padding: 12px; color: #57606a;">Henüz panel eklenmemiş.</div>';
+                return;
+            }
+            var html = '';
+            for (var i = 0; i < this.state.panels.length; i++) {
+                var p = this.state.panels[i];
+                var active = (p.id === this.state.selectedPanelId) ? 'active' : '';
+                var name = p.name || p.serverUrl.replace(/^https?:\/\//, '');
+                html += '<div class="panel-item ' + active + '" data-id="' + p.id + '">' + this.escape(name) + '</div>';
+            }
+            container.innerHTML = html;
+
+            var items = container.querySelectorAll('.panel-item');
+            for (var j = 0; j < items.length; j++) {
+                (function(el) {
+                    el.addEventListener('click', function() {
+                        self.selectPanel(el.dataset.id);
+                    });
+                })(items[j]);
             }
         };
 
         app.selectPanel = function(id) {
-            try {
-                this.state.selectedPanelId = id;
-                var panel = null;
-                for (var i = 0; i < this.state.panels.length; i++) {
-                    if (this.state.panels[i].id === id) {
-                        panel = this.state.panels[i];
-                        break;
-                    }
+            this.state.selectedPanelId = id;
+            var panel = null;
+            for (var i = 0; i < this.state.panels.length; i++) {
+                if (this.state.panels[i].id === id) {
+                    panel = this.state.panels[i];
+                    break;
                 }
-                if (panel) {
-                    document.getElementById('panelName').value = panel.name || '';
-                    document.getElementById('panelServerUrl').value = panel.serverUrl;
-                    document.getElementById('panelUsername').value = panel.username;
-                    document.getElementById('panelPassword').value = panel.password;
-                    document.getElementById('savePanelBtn').textContent = 'Güncelle';
-                    document.getElementById('deletePanelBtn').disabled = false;
-                    this.notify('✅ Panel seçildi: ' + (panel.name || panel.serverUrl), 'success');
-                } else {
-                    this.newPanel();
-                    this.notify('⚠️ Panel bulunamadı, yeni panel oluşturabilirsiniz.', 'warning');
-                }
-                this.renderPanelList();
-            } catch (e) {
-                console.error('selectPanel hatası:', e);
-                this.notify('Panel seçme hatası: ' + e.message, 'error');
             }
+            if (panel) {
+                document.getElementById('panelName').value = panel.name || '';
+                document.getElementById('panelServerUrl').value = panel.serverUrl;
+                document.getElementById('panelUsername').value = panel.username;
+                document.getElementById('panelPassword').value = panel.password;
+                document.getElementById('savePanelBtn').textContent = 'Güncelle';
+                document.getElementById('deletePanelBtn').disabled = false;
+            } else {
+                this.newPanel();
+                this.notify('⚠️ Panel bulunamadı, yeni panel oluşturabilirsiniz.', 'warning');
+            }
+            this.renderPanelList();
         };
 
         app.newPanel = function() {
-            try {
-                this.state.selectedPanelId = null;
-                document.getElementById('panelName').value = '';
-                document.getElementById('panelServerUrl').value = '';
-                document.getElementById('panelUsername').value = '';
-                document.getElementById('panelPassword').value = '';
-                document.getElementById('savePanelBtn').textContent = 'Ekle';
-                document.getElementById('deletePanelBtn').disabled = true;
-                this.renderPanelList();
-            } catch (e) {
-                console.error('newPanel hatası:', e);
-            }
+            this.state.selectedPanelId = null;
+            document.getElementById('panelName').value = '';
+            document.getElementById('panelServerUrl').value = '';
+            document.getElementById('panelUsername').value = '';
+            document.getElementById('panelPassword').value = '';
+            document.getElementById('savePanelBtn').textContent = 'Ekle';
+            document.getElementById('deletePanelBtn').disabled = true;
+            this.renderPanelList();
         };
 
         app.savePanel = function() {
+            var name = document.getElementById('panelName').value.trim();
+            var serverUrl = document.getElementById('panelServerUrl').value.trim();
+            var username = document.getElementById('panelUsername').value.trim();
+            var password = document.getElementById('panelPassword').value.trim();
+
+            if (!serverUrl || !username || !password) {
+                this.notify('⚠️ Lütfen tüm zorunlu alanları doldurun.', 'warning');
+                return;
+            }
+
             try {
-                var name = document.getElementById('panelName').value.trim();
-                var serverUrl = document.getElementById('panelServerUrl').value.trim();
-                var username = document.getElementById('panelUsername').value.trim();
-                var password = document.getElementById('panelPassword').value.trim();
-                if (!serverUrl || !username || !password) {
-                    this.notify('⚠️ Lütfen tüm zorunlu alanları doldurun.', 'warning');
-                    return;
-                }
                 if (this.state.selectedPanelId) {
                     var panel = null;
                     for (var i = 0; i < this.state.panels.length; i++) {
@@ -688,18 +659,18 @@
                     document.getElementById('deletePanelBtn').disabled = false;
                 }
             } catch (e) {
-                console.error('savePanel hatası:', e);
+                console.error('Panel kaydedilirken hata:', e);
                 this.notify('❌ Panel kaydedilemedi: ' + e.message, 'error');
             }
         };
 
         app.deletePanel = function() {
+            if (!this.state.selectedPanelId) {
+                this.notify('⚠️ Silmek için bir panel seçin.', 'warning');
+                return;
+            }
+            if (!confirm('Bu paneli silmek istediğinize emin misiniz?')) return;
             try {
-                if (!this.state.selectedPanelId) {
-                    this.notify('⚠️ Silmek için bir panel seçin.', 'warning');
-                    return;
-                }
-                if (!confirm('Bu paneli silmek istediğinize emin misiniz?')) return;
                 var newPanels = [];
                 for (var i = 0; i < this.state.panels.length; i++) {
                     if (this.state.panels[i].id !== this.state.selectedPanelId) {
@@ -713,27 +684,23 @@
                 this.renderPanelList();
                 this.notify('🗑️ Panel silindi.', 'info');
             } catch (e) {
-                console.error('deletePanel hatası:', e);
+                console.error('Panel silinirken hata:', e);
                 this.notify('❌ Panel silinemedi.', 'error');
             }
         };
 
         app.connectPanel = function() {
-            try {
-                var serverUrl = document.getElementById('panelServerUrl').value.trim();
-                var username = document.getElementById('panelUsername').value.trim();
-                var password = document.getElementById('panelPassword').value.trim();
-                if (!serverUrl || !username || !password) {
-                    this.notify('⚠️ Lütfen tüm alanları doldurun.', 'warning');
-                    return;
-                }
-                this.doLogin({ serverUrl: serverUrl, username: username, password: password });
-            } catch (e) {
-                console.error('connectPanel hatası:', e);
-                this.notify('Bağlanma hatası: ' + e.message, 'error');
+            var serverUrl = document.getElementById('panelServerUrl').value.trim();
+            var username = document.getElementById('panelUsername').value.trim();
+            var password = document.getElementById('panelPassword').value.trim();
+            if (!serverUrl || !username || !password) {
+                this.notify('⚠️ Lütfen tüm alanları doldurun.', 'warning');
+                return;
             }
+            this.doLogin({ serverUrl: serverUrl, username: username, password: password });
         };
 
+        // ----- Giriş İşlemleri -----
         app.doLogin = function(creds) {
             var self = this;
             this.state.creds = creds;
@@ -741,23 +708,16 @@
                 this.notify('🔄 IPTV sunucusuna bağlanılıyor...', 'info');
                 var url = this.buildUrl('player_api.php');
                 httpRequestJson('GET', url, function(data) {
-                    try {
-                        if (data.user_info && data.user_info.auth === 1) {
-                            self.state.userInfo = data.user_info;
-                            self.loadApp();
-                            self.notify('✅ Bağlantı başarılı!', 'success');
-                            self.closeModal('loginModal');
-                        } else {
-                            self.notify('❌ Geçersiz kimlik bilgileri.', 'error');
-                            self.state.creds = null;
-                            self.state.userInfo = null;
-                        }
-                    } catch (e) {
-                        console.error('doLogin callback hatası:', e);
-                        self.notify('❌ Veri işleme hatası: ' + e.message, 'error');
+                    if (data.user_info && data.user_info.auth === 1) {
+                        self.state.userInfo = data.user_info;
+                        self.loadApp();
+                        self.notify('✅ Bağlantı başarılı!', 'success');
+                        self.closeModal('loginModal');
+                    } else {
+                        throw new Error('Geçersiz kimlik bilgileri');
                     }
                 }, function(err) {
-                    self.notify('❌ Bağlantı başarısız! ' + err, 'error');
+                    self.notify('❌ Bağlantı başarısız! Kimlik bilgilerinizi kontrol edin.', 'error');
                     self.state.creds = null;
                     self.state.userInfo = null;
                 });
@@ -769,16 +729,12 @@
         };
 
         app.checkUrl = function() {
-            try {
-                var params = getQueryParams();
-                var config = params.config;
-                if (config) {
-                    this.state.pendingConfig = decodeURIComponent(config);
-                    this.closeModal('loginModal');
-                    document.getElementById('passwordModal').classList.add('active');
-                }
-            } catch (e) {
-                console.warn('checkUrl hatası:', e);
+            var params = getQueryParams();
+            var config = params.config;
+            if (config) {
+                this.state.pendingConfig = decodeURIComponent(config);
+                this.closeModal('loginModal');
+                document.getElementById('passwordModal').classList.add('active');
             }
         };
 
@@ -806,32 +762,30 @@
                     var decrypted2 = decryptData(this.state.pendingConfig, password);
                     config = JSON.parse(decrypted2);
                 }
+
                 this.state.creds = config.credentials;
                 this.state.favorites = config.favorites || [];
                 this.saveFavorites();
+
                 var url = this.buildUrl('player_api.php');
                 httpRequestJson('GET', url, function(data) {
-                    try {
-                        if (data.user_info && data.user_info.auth === 1) {
-                            self.state.userInfo = data.user_info;
-                        }
-                        self.closeModal('passwordModal');
-                        self.loadApp();
-                        self.notify('✅ Yapılandırma başarıyla yüklendi!', 'success');
-                        try {
-                            if (location.protocol !== 'file:') {
-                                history.replaceState({}, '', location.pathname);
-                            }
-                        } catch (err) {}
-                    } catch (e) {
-                        console.error('decrypt callback hatası:', e);
-                        self.notify('❌ Veri işleme hatası: ' + e.message, 'error');
+                    if (data.user_info && data.user_info.auth === 1) {
+                        self.state.userInfo = data.user_info;
                     }
+                    self.closeModal('passwordModal');
+                    self.loadApp();
+                    self.notify('✅ Yapılandırma başarıyla yüklendi!', 'success');
+                    try {
+                        if (location.protocol !== 'file:') {
+                            history.replaceState({}, '', location.pathname);
+                        }
+                    } catch (err) {}
                 }, function(err) {
                     self.closeModal('passwordModal');
                     self.loadApp();
                     self.notify('✅ Yapılandırma yüklendi (kullanıcı bilgisi alınamadı)', 'info');
                 });
+
             } catch (error) {
                 console.error('Şifre çözme hatası:', error);
                 this.notify('❌ Yanlış şifre! Lütfen tekrar deneyin.', 'error');
@@ -839,57 +793,50 @@
             }
         };
 
+        // ----- Uygulama Yükleme -----
         app.loadApp = function() {
-            try {
-                this.closeModal('loginModal');
-                document.getElementById('mainApp').classList.remove('hidden');
-                document.getElementById('userInfo').textContent = '👤 ' + this.state.creds.username;
-                this.displayExpiry();
-                this.updateFavCount();
-                this.loadCategories();
-                this.loadChannels();
-            } catch (e) {
-                console.error('loadApp hatası:', e);
-                this.notify('Uygulama yüklenirken hata: ' + e.message, 'error');
-            }
+            this.closeModal('loginModal');
+            document.getElementById('mainApp').classList.remove('hidden');
+            document.getElementById('userInfo').textContent = '👤 ' + this.state.creds.username;
+            this.displayExpiry();
+            this.updateFavCount();
+            this.loadCategories();
+            this.loadChannels();
         };
 
         app.displayExpiry = function() {
-            try {
-                var expiryEl = document.getElementById('expiryInfo');
-                if (!this.state.userInfo || !this.state.userInfo.exp_date) {
-                    expiryEl.classList.add('hidden');
-                    return;
-                }
-                var expTimestamp = parseInt(this.state.userInfo.exp_date, 10);
-                if (!expTimestamp || expTimestamp === 0) {
-                    expiryEl.textContent = '📅 Süresiz';
-                    expiryEl.classList.remove('hidden');
-                    return;
-                }
-                var expDate = new Date(expTimestamp * 1000);
-                var now = new Date();
-                var daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
-                var day = expDate.getDate();
-                var month = expDate.toLocaleDateString('tr-TR', { month: 'short' });
-                var year = expDate.getFullYear();
-                var dateStr = day + ' ' + month + ' ' + year;
-                if (daysLeft < 0) {
-                    expiryEl.textContent = '📅 Süresi doldu';
-                    expiryEl.className = 'badge badge-danger';
-                } else if (daysLeft <= 7) {
-                    expiryEl.textContent = '📅 ' + daysLeft + ' gün sonra sona eriyor (' + dateStr + ')';
-                    expiryEl.className = 'badge badge-warning';
-                } else {
-                    expiryEl.textContent = '📅 Geçerlilik tarihi ' + dateStr;
-                    expiryEl.className = 'badge badge-primary';
-                }
-                expiryEl.classList.remove('hidden');
-            } catch (e) {
-                console.error('displayExpiry hatası:', e);
+            var expiryEl = document.getElementById('expiryInfo');
+            if (!this.state.userInfo || !this.state.userInfo.exp_date) {
+                expiryEl.classList.add('hidden');
+                return;
             }
+            var expTimestamp = parseInt(this.state.userInfo.exp_date);
+            if (!expTimestamp || expTimestamp === 0) {
+                expiryEl.textContent = '📅 Süresiz';
+                expiryEl.classList.remove('hidden');
+                return;
+            }
+            var expDate = new Date(expTimestamp * 1000);
+            var now = new Date();
+            var daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
+            var day = expDate.getDate();
+            var month = expDate.toLocaleDateString('tr-TR', { month: 'short' });
+            var year = expDate.getFullYear();
+            var dateStr = day + ' ' + month + ' ' + year;
+            if (daysLeft < 0) {
+                expiryEl.textContent = '📅 Süresi doldu';
+                expiryEl.className = 'badge badge-danger';
+            } else if (daysLeft <= 7) {
+                expiryEl.textContent = '📅 ' + daysLeft + ' gün sonra sona eriyor (' + dateStr + ')';
+                expiryEl.className = 'badge badge-warning';
+            } else {
+                expiryEl.textContent = '📅 Geçerlilik tarihi ' + dateStr;
+                expiryEl.className = 'badge badge-primary';
+            }
+            expiryEl.classList.remove('hidden');
         };
 
+        // ----- Kategori ve Kanal İşlemleri -----
         app.loadCategories = function() {
             var self = this;
             var key = this.state.type;
@@ -903,26 +850,16 @@
                 this.notify('📂 Kategoriler yükleniyor...', 'info');
                 var url = this.buildUrl('player_api.php', 'action=' + actions[this.state.type]);
                 httpRequestJson('GET', url, function(data) {
-                    try {
-                        var cats = extractChannels(data);
-                        self.state.categories = cats;
-                        self.state.catCache[key] = self.state.categories;
-                        self.renderCategories();
-                        self.notify('✅ ' + cats.length + ' kategori yüklendi', 'success');
-                    } catch (e) {
-                        console.error('Kategori işleme hatası:', e);
-                        self.state.categories = [];
-                        self.notify('⚠️ Kategori işleme hatası: ' + e.message, 'warning');
-                    }
+                    self.state.categories = Array.isArray(data) ? data : [];
+                    self.state.catCache[key] = self.state.categories;
+                    self.renderCategories();
                 }, function(err) {
-                    console.error('Kategori yükleme hatası:', err);
                     self.state.categories = [];
-                    self.notify('⚠️ Kategoriler yüklenemedi: ' + err, 'warning');
+                    self.notify('⚠️ Kategoriler yüklenemedi', 'warning');
                 });
             } catch (error) {
-                console.error('loadCategories hatası:', error);
                 this.state.categories = [];
-                this.notify('⚠️ Kategoriler yüklenemedi: ' + error.message, 'warning');
+                this.notify('⚠️ Kategoriler yüklenemedi', 'warning');
             }
         };
 
@@ -945,47 +882,32 @@
                 if (this.state.category !== 'all') params += '&category_id=' + this.state.category;
                 var url = this.buildUrl('player_api.php', params);
                 httpRequestJson('GET', url, function(data) {
-                    try {
-                        var channels = extractChannels(data);
-                        self.state.allChannels = channels;
-                        self.state.channels = channels.slice(0);
-                        self.state.cache[key] = self.state.allChannels;
-                        self.resetPage();
-                        self.renderCategories();
-                        self.renderChannels();
-                        self.notify('✅ ' + self.state.allChannels.length + ' kanal yüklendi', 'success');
-                    } catch (e) {
-                        console.error('Kanal işleme hatası:', e);
-                        self.state.allChannels = [];
-                        self.state.channels = [];
-                        document.getElementById('channelsList').innerHTML = '<div class="text-center text-small">Kanal işleme hatası: ' + e.message + '</div>';
-                        self.notify('❌ Kanal işleme hatası: ' + e.message, 'error');
-                    }
+                    self.state.allChannels = Array.isArray(data) ? data : [];
+                    self.state.channels = self.state.allChannels.slice(0);
+                    self.state.cache[key] = self.state.allChannels;
+                    self.resetPage();
+                    self.renderCategories();
+                    self.renderChannels();
+                    self.notify('✅ ' + self.state.allChannels.length + ' kanal yüklendi', 'success');
                 }, function(err) {
-                    console.error('Kanal yükleme hatası:', err);
-                    document.getElementById('channelsList').innerHTML = '<div class="text-center text-small">Kanallar yüklenemedi: ' + err + '</div>';
-                    self.notify('❌ Kanallar yüklenemedi: ' + err, 'error');
+                    document.getElementById('channelsList').innerHTML = '<div class="text-center text-small">Kanallar yüklenemedi</div>';
+                    self.notify('❌ Kanallar yüklenemedi', 'error');
                 });
             } catch (error) {
-                console.error('loadChannels hatası:', error);
                 document.getElementById('channelsList').innerHTML = '<div class="text-center text-small">Kanallar yüklenemedi</div>';
-                this.notify('❌ Kanallar yüklenemedi: ' + error.message, 'error');
+                this.notify('❌ Kanallar yüklenemedi', 'error');
             }
         };
 
         app.renderCategories = function() {
-            try {
-                var select = document.getElementById('categorySelect');
-                var html = '<option value="all">Tüm Kategoriler (' + this.state.allChannels.length + ')</option>';
-                for (var i = 0; i < this.state.categories.length; i++) {
-                    var c = this.state.categories[i];
-                    html += '<option value="' + c.category_id + '">' + this.escape(c.category_name) + '</option>';
-                }
-                select.innerHTML = html;
-                select.value = this.state.category;
-            } catch (e) {
-                console.error('renderCategories hatası:', e);
+            var select = document.getElementById('categorySelect');
+            var html = '<option value="all">Tüm Kategoriler (' + this.state.allChannels.length + ')</option>';
+            for (var i = 0; i < this.state.categories.length; i++) {
+                var c = this.state.categories[i];
+                html += '<option value="' + c.category_id + '">' + this.escape(c.category_name) + '</option>';
             }
+            select.innerHTML = html;
+            select.value = this.state.category;
         };
 
         app.resetPage = function() {
@@ -995,590 +917,359 @@
 
         app.renderChannels = function() {
             var self = this;
-            try {
-                var start = this.state.page * this.state.pageSize;
-                var end = start + this.state.pageSize;
-                var page = this.state.channels.slice(start, end);
-                if (this.state.page === 0) this.state.displayed = [];
-                this.state.displayed = this.state.displayed.concat(page);
-                var container = document.getElementById('channelsList');
-                var resultEl = document.getElementById('resultCount');
-                if (this.state.displayed.length === 0) {
-                    container.innerHTML = '<div class="text-center text-small">Kanal bulunamadı</div>';
-                    resultEl.classList.add('hidden');
-                    return;
-                }
-                if (this.state.search) {
-                    resultEl.textContent = '"' + this.state.search + '" için ' + this.state.channels.length + ' kanal bulundu';
-                    resultEl.classList.remove('hidden');
-                } else {
-                    resultEl.classList.add('hidden');
-                }
-                var html = '';
-                for (var i = 0; i < this.state.displayed.length; i++) {
-                    var ch = this.state.displayed[i];
-                    var name = this.escape(ch.name || ch.title || 'Bilinmiyor');
-                    var isFav = (this.state.favorites.indexOf(this.getId(ch)) !== -1);
-                    var streamType = ch.stream_type || '';
-                    if (streamType.toLowerCase() === 'live') streamType = 'Canlı';
-                    var chJson = JSON.stringify(ch).replace(/'/g, '&apos;');
-                    html += '<div class="channel-item" data-channel=\'' + chJson + '\'>' +
-                        '<div class="channel-header">' +
-                        '<div class="channel-info">' +
-                        '<div class="channel-name">' + name + '</div>' +
-                        (streamType ? '<span class="badge">' + streamType + '</span>' : '') +
-                        '</div>' +
-                        '<button class="fav-btn ' + (isFav ? 'active' : 'inactive') + '" data-id="' + this.getId(ch) + '">' +
-                        (isFav ? '★' : '☆') +
-                        '</button>' +
-                        '</div>' +
-                        '</div>';
-                }
-                var hasMore = this.state.displayed.length < this.state.channels.length;
-                if (hasMore) {
-                    html += '<button class="load-more">Daha Fazla Yükle (' + (this.state.channels.length - this.state.displayed.length) + ' kaldı)</button>';
-                }
-                container.innerHTML = html;
-                var items = container.querySelectorAll('.channel-item');
-                for (var j = 0; j < items.length; j++) {
-                    (function(item) {
-                        item.addEventListener('click', function() {
-                            try {
-                                var ch = JSON.parse(item.dataset.channel);
-                                if (self.state.type === 'series') {
-                                    self.showEpisodes(ch);
-                                } else {
-                                    self.play(ch);
-                                }
-                            } catch (e) {
-                                console.error('Kanal tıklama hatası:', e);
-                                self.notify('Kanal oynatma hatası: ' + e.message, 'error');
-                            }
-                        });
-                    })(items[j]);
-                }
-                var favBtns = container.querySelectorAll('.fav-btn');
-                for (var k = 0; k < favBtns.length; k++) {
-                    (function(btn) {
-                        btn.addEventListener('click', function(e) {
-                            e.stopPropagation();
-                            try {
-                                self.toggleFav(btn.dataset.id);
-                            } catch (err) {
-                                console.error('Favori tıklama hatası:', err);
-                            }
-                        });
-                    })(favBtns[k]);
-                }
-                if (hasMore) {
-                    var loadMore = container.querySelector('.load-more');
-                    if (loadMore) {
-                        loadMore.addEventListener('click', function() {
-                            self.state.page++;
-                            self.renderChannels();
-                        });
-                    }
-                }
-            } catch (e) {
-                console.error('renderChannels hatası:', e);
-                this.notify('Kanal listeleme hatası: ' + e.message, 'error');
+            var start = this.state.page * this.state.pageSize;
+            var end = start + this.state.pageSize;
+            var page = this.state.channels.slice(start, end);
+
+            if (this.state.page === 0) this.state.displayed = [];
+            this.state.displayed = this.state.displayed.concat(page);
+
+            var container = document.getElementById('channelsList');
+            var resultEl = document.getElementById('resultCount');
+
+            if (this.state.displayed.length === 0) {
+                container.innerHTML = '<div class="text-center text-small">Kanal bulunamadı</div>';
+                resultEl.classList.add('hidden');
+                return;
+            }
+
+            if (this.state.search) {
+                resultEl.textContent = '"' + this.state.search + '" için ' + this.state.channels.length + ' kanal bulundu';
+                resultEl.classList.remove('hidden');
+            } else {
+                resultEl.classList.add('hidden');
+            }
+
+            var html = '';
+            for (var i = 0; i < this.state.displayed.length; i++) {
+                var ch = this.state.displayed[i];
+                var name = this.escape(ch.name || ch.title || 'Bilinmiyor');
+                var isFav = (this.state.favorites.indexOf(this.getId(ch)) !== -1);
+                var streamType = ch.stream_type || '';
+                if (streamType.toLowerCase() === 'live') streamType = 'Canlı';
+                var chJson = JSON.stringify(ch).replace(/'/g, '&apos;');
+                html += '<div class="channel-item" data-channel=\'' + chJson + '\'>' +
+                    '<div class="channel-header">' +
+                    '<div class="channel-info">' +
+                    '<div class="channel-name">' + name + '</div>' +
+                    (streamType ? '<span class="badge">' + streamType + '</span>' : '') +
+                    '</div>' +
+                    '<button class="fav-btn ' + (isFav ? 'active' : 'inactive') + '" data-id="' + this.getId(ch) + '">' +
+                    (isFav ? '★' : '☆') +
+                    '</button>' +
+                    '</div>' +
+                    '</div>';
+            }
+
+            var hasMore = this.state.displayed.length < this.state.channels.length;
+            if (hasMore) {
+                html += '<button class="load-more">Daha Fazla Yükle (' + (this.state.channels.length - this.state.displayed.length) + ' kaldı)</button>';
+            }
+
+            container.innerHTML = html;
+
+            var items = container.querySelectorAll('.channel-item');
+            for (var j = 0; j < items.length; j++) {
+                (function(item) {
+                    item.addEventListener('click', function() {
+                        var ch = JSON.parse(item.dataset.channel);
+                        if (self.state.type === 'series') {
+                            self.showEpisodes(ch);
+                        } else {
+                            self.play(ch);
+                        }
+                    });
+                })(items[j]);
+            }
+
+            var favBtns = container.querySelectorAll('.fav-btn');
+            for (var k = 0; k < favBtns.length; k++) {
+                (function(btn) {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        self.toggleFav(btn.dataset.id);
+                    });
+                })(favBtns[k]);
+            }
+
+            if (hasMore) {
+                container.querySelector('.load-more').addEventListener('click', function() {
+                    self.state.page++;
+                    self.renderChannels();
+                });
             }
         };
 
         app.handleScroll = function() {
-            try {
-                var el = document.getElementById('channelsList');
-                if ((el.scrollTop + el.clientHeight) / el.scrollHeight > 0.8) {
-                    var btn = el.querySelector('.load-more');
-                    if (btn) btn.click();
-                }
-            } catch (e) {
-                console.error('handleScroll hatası:', e);
+            var el = document.getElementById('channelsList');
+            if ((el.scrollTop + el.clientHeight) / el.scrollHeight > 0.8) {
+                var btn = el.querySelector('.load-more');
+                if (btn) btn.click();
             }
         };
 
         app.showSkeleton = function() {
-            try {
-                var html = '';
-                for (var i = 0; i < 5; i++) {
-                    html += '<div class="channel-item">' +
-                        '<div class="skeleton h-8 w-75 mb-2"></div>' +
-                        '<div class="skeleton h-8 w-25"></div>' +
-                        '</div>';
-                }
-                document.getElementById('channelsList').innerHTML = html;
-            } catch (e) {
-                console.error('showSkeleton hatası:', e);
+            var html = '';
+            for (var i = 0; i < 5; i++) {
+                html += '<div class="channel-item">' +
+                    '<div class="skeleton h-8 w-75 mb-2"></div>' +
+                    '<div class="skeleton h-8 w-25"></div>' +
+                    '</div>';
             }
+            document.getElementById('channelsList').innerHTML = html;
         };
 
-        // ============================================================
-        //  DİZİ BÖLÜMLERİ - 3 FARKLI YÖNTEM DENE
-        // ============================================================
+        // ----- Bölümler, Oynatma, Favoriler -----
         app.showEpisodes = function(series) {
             var self = this;
-            this.state.currentSeries = series;
-            this.state.loadedSeasons = {};
             try {
-                this.notify('📺 Sezonlar yükleniyor...', 'info');
-                // Yöntem 1: include_episodes=1
-                var url1 = this.buildUrl('player_api.php', 'action=get_series_info&series_id=' + series.series_id + '&include_episodes=1');
-                httpRequestJson('GET', url1, function(data) {
-                    self.processSeriesData(data, series);
+                this.notify('📺 Bölümler yükleniyor...', 'info');
+                var url = this.buildUrl('player_api.php', 'action=get_series_info&series_id=' + series.series_id);
+                httpRequestJson('GET', url, function(data) {
+                    document.getElementById('seriesTitle').textContent = series.name || series.title;
+                    var list = document.getElementById('episodesList');
+                    if (!data.episodes || Object.keys(data.episodes).length === 0) {
+                        list.innerHTML = '<div class="text-center text-small">Bölüm bulunmuyor</div>';
+                    } else {
+                        var seasons = Object.keys(data.episodes).sort(function(a, b) { return a - b; });
+                        var html = '';
+                        for (var s = 0; s < seasons.length; s++) {
+                            var seasonNum = seasons[s];
+                            var eps = data.episodes[seasonNum];
+                            html += '<div class="season-header">Sezon ' + seasonNum + '</div>';
+                            for (var e = 0; e < eps.length; e++) {
+                                var ep = eps[e];
+                                var epJson = JSON.stringify(ep).replace(/'/g, '&apos;');
+                                var seriesJson = JSON.stringify(series).replace(/'/g, '&apos;');
+                                html += '<div class="episode-item" data-ep=\'' + epJson + '\' data-series=\'' + seriesJson + '\'>' +
+                                    '<h3>Bölüm ' + ep.episode_num + ': ' + self.escape(ep.title || 'Başlıksız') + '</h3>' +
+                                    '</div>';
+                            }
+                        }
+                        list.innerHTML = html;
+
+                        var epItems = list.querySelectorAll('.episode-item');
+                        for (var i = 0; i < epItems.length; i++) {
+                            (function(item) {
+                                item.addEventListener('click', function() {
+                                    var ep = JSON.parse(item.dataset.ep);
+                                    var ser = JSON.parse(item.dataset.series);
+                                    self.playEpisode(ep, ser);
+                                    self.closeModal('episodesModal');
+                                });
+                            })(epItems[i]);
+                        }
+                        self.notify('✅ ' + Object.keys(data.episodes).length + ' sezon yüklendi', 'success');
+                    }
+                    document.getElementById('episodesModal').classList.add('active');
                 }, function(err) {
-                    console.warn('Yöntem 1 başarısız:', err);
-                    // Yöntem 2: normal get_series_info
-                    var url2 = self.buildUrl('player_api.php', 'action=get_series_info&series_id=' + series.series_id);
-                    httpRequestJson('GET', url2, function(data) {
-                        self.processSeriesData(data, series);
-                    }, function(err2) {
-                        console.warn('Yöntem 2 başarısız:', err2);
-                        self.notify('❌ Sezonlar yüklenemedi. Sunucu yanıt vermiyor.', 'error');
-                        document.getElementById('episodesList').innerHTML = '<div class="text-center text-small">❌ Sezon bilgisi alınamadı.</div>';
-                        document.getElementById('episodesModal').classList.add('active');
-                    });
+                    self.notify('❌ Bölümler yüklenemedi', 'error');
                 });
             } catch (error) {
-                console.error('showEpisodes hatası:', error);
-                this.notify('❌ Hata: ' + error.message, 'error');
-                document.getElementById('episodesModal').classList.add('active');
+                this.notify('❌ Bölümler yüklenemedi', 'error');
             }
         };
 
-        app.processSeriesData = function(data, series) {
-            var self = this;
-            try {
-                // Debug: tam yanıtı göster
-                document.getElementById('debugData').textContent = JSON.stringify(data, null, 2);
-
-                document.getElementById('seriesTitle').textContent = series.name || series.title;
-                var list = document.getElementById('episodesList');
-
-                // Sezon verisini al
-                var seasonsData = data.seasons || data.Seasons || data.season || data.Season;
-                if (!seasonsData || !Array.isArray(seasonsData) || seasonsData.length === 0) {
-                    list.innerHTML = '<div class="text-center text-small">⚠️ Bu dizi için sezon bilgisi bulunamadı.</div>';
-                    self.notify('⚠️ Sezon verisi yok.', 'warning');
-                    document.getElementById('episodesModal').classList.add('active');
-                    return;
-                }
-
-                var html = '';
-                for (var i = 0; i < seasonsData.length; i++) {
-                    var season = seasonsData[i];
-                    var seasonNum = season.season_number || season.number || season.id || (i + 1);
-                    var seasonName = season.name || 'Sezon ' + seasonNum;
-                    var episodeCount = season.episode_count || season.episodeCount || '?';
-                    html += '<div class="season-header" data-season="' + seasonNum + '" data-series-id="' + series.series_id + '">' +
-                        '📺 ' + seasonName + ' (' + episodeCount + ' bölüm) <span class="arrow">▼</span>' +
-                        '</div>';
-                    html += '<div id="season-' + seasonNum + '" class="season-episodes" style="display:none;"></div>';
-                }
-
-                list.innerHTML = html;
-                self.notify('✅ ' + seasonsData.length + ' sezon bulundu. Bölümleri görmek için sezona tıklayın.', 'success');
-
-                // Sezon başlıklarına tıklama olayı
-                var headers = list.querySelectorAll('.season-header');
-                for (var h = 0; h < headers.length; h++) {
-                    (function(header) {
-                        header.addEventListener('click', function() {
-                            var seasonNum = header.getAttribute('data-season');
-                            var seriesId = header.getAttribute('data-series-id');
-                            var container = document.getElementById('season-' + seasonNum);
-                            if (container.style.display === 'block') {
-                                container.style.display = 'none';
-                                header.querySelector('.arrow').textContent = '▼';
-                                return;
-                            }
-                            if (container.innerHTML !== '') {
-                                container.style.display = 'block';
-                                header.querySelector('.arrow').textContent = '▲';
-                                return;
-                            }
-                            container.style.display = 'block';
-                            header.querySelector('.arrow').textContent = '▲';
-                            self.loadSeasonEpisodes(seriesId, seasonNum, container);
-                        });
-                    })(headers[h]);
-                }
-
-                document.getElementById('episodesModal').classList.add('active');
-
-            } catch (e) {
-                console.error('processSeriesData hatası:', e);
-                document.getElementById('episodesList').innerHTML = '<div class="text-center text-small">❌ Hata: ' + e.message + '</div>';
-                self.notify('❌ Sezon işleme hatası: ' + e.message, 'error');
-                document.getElementById('episodesModal').classList.add('active');
-            }
-        };
-
-        // ----- Sezon bölümlerini yükle (3 yöntem) -----
-        app.loadSeasonEpisodes = function(seriesId, seasonNumber, container) {
-            var self = this;
-            container.innerHTML = '<div class="episode-loading">📥 Bölümler yükleniyor...</div>';
-
-            // Yöntem A: get_series_episodes
-            var urlA = this.buildUrl('player_api.php', 'action=get_series_episodes&series_id=' + seriesId + '&season_number=' + seasonNumber);
-            httpRequestJson('GET', urlA, function(data) {
-                self.processEpisodesData(data, container, seriesId, seasonNumber);
-            }, function(errA) {
-                console.warn('get_series_episodes başarısız:', errA);
-                // Yöntem B: get_episodes (alternatif)
-                var urlB = self.buildUrl('player_api.php', 'action=get_episodes&series_id=' + seriesId + '&season=' + seasonNumber);
-                httpRequestJson('GET', urlB, function(data) {
-                    self.processEpisodesData(data, container, seriesId, seasonNumber);
-                }, function(errB) {
-                    console.warn('get_episodes başarısız:', errB);
-                    // Yöntem C: direkt series_id ile tüm bölümleri al (bazı panellerde)
-                    var urlC = self.buildUrl('player_api.php', 'action=get_series_episodes&series_id=' + seriesId);
-                    httpRequestJson('GET', urlC, function(data) {
-                        self.processEpisodesData(data, container, seriesId, seasonNumber);
-                    }, function(errC) {
-                        console.error('Tüm yöntemler başarısız:', errC);
-                        container.innerHTML = '<div class="text-small" style="padding: 8px 16px; color: #cf222e;">❌ Bölümler yüklenemedi. Sunucu yanıt vermiyor.</div>';
-                        self.notify('❌ Bölüm yükleme başarısız: ' + errC, 'error');
-                    });
-                });
-            });
-        };
-
-        app.processEpisodesData = function(data, container, seriesId, seasonNumber) {
-            var self = this;
-            try {
-                // Debug'e ekle
-                document.getElementById('debugData').textContent = JSON.stringify(data, null, 2);
-
-                // Veriyi ayrıştır - farklı olası anahtarlar
-                var episodes = data.episodes || data.Episodes || data.episode || data.data || data.list || data.items || [];
-                if (!Array.isArray(episodes)) episodes = [];
-
-                // Eğer gelen veri direkt dizi değilse ve episodes boşsa, objenin içindeki ilk diziye bak
-                if (episodes.length === 0 && typeof data === 'object') {
-                    for (var key in data) {
-                        if (data.hasOwnProperty(key) && Array.isArray(data[key])) {
-                            episodes = data[key];
-                            break;
-                        }
-                    }
-                }
-
-                if (episodes.length === 0) {
-                    container.innerHTML = '<div class="text-small" style="padding: 8px 16px; color: #57606a;">⚠️ Bu sezon için bölüm bulunamadı.</div>';
-                    self.notify('⚠️ Bölüm yok.', 'warning');
-                    return;
-                }
-
-                // Bölümleri sırala
-                episodes.sort(function(a, b) {
-                    var numA = parseInt(a.episode_num || a.episode_number || a.num || a.id || 0, 10);
-                    var numB = parseInt(b.episode_num || b.episode_number || b.num || b.id || 0, 10);
-                    return numA - numB;
-                });
-
-                var html = '';
-                for (var i = 0; i < episodes.length; i++) {
-                    var ep = episodes[i];
-                    var epNum = ep.episode_num || ep.episode_number || ep.num || ep.id || (i + 1);
-                    var title = ep.title || ep.name || ep.episode_name || 'Bölüm ' + epNum;
-                    var epJson = JSON.stringify(ep).replace(/'/g, '&apos;');
-                    var seriesJson = JSON.stringify(self.state.currentSeries).replace(/'/g, '&apos;');
-                    html += '<div class="episode-item" data-ep=\'' + epJson + '\' data-series=\'' + seriesJson + '\'>' +
-                        '<h3>🎬 Bölüm ' + epNum + ': ' + self.escape(title) + '</h3>' +
-                        '</div>';
-                }
-                container.innerHTML = html;
-
-                // Bölüm tıklama olayları
-                var epItems = container.querySelectorAll('.episode-item');
-                for (var j = 0; j < epItems.length; j++) {
-                    (function(item) {
-                        item.addEventListener('click', function() {
-                            try {
-                                var ep = JSON.parse(item.dataset.ep);
-                                var ser = JSON.parse(item.dataset.series);
-                                self.playEpisode(ep, ser);
-                                self.closeModal('episodesModal');
-                            } catch (e) {
-                                console.error('Bölüm tıklama hatası:', e);
-                                self.notify('Bölüm oynatma hatası: ' + e.message, 'error');
-                            }
-                        });
-                    })(epItems[j]);
-                }
-
-                self.notify('✅ ' + episodes.length + ' bölüm yüklendi.', 'success');
-
-            } catch (e) {
-                console.error('processEpisodesData hatası:', e);
-                container.innerHTML = '<div class="text-small" style="padding: 8px 16px; color: #cf222e;">❌ Bölüm işleme hatası: ' + e.message + '</div>';
-                self.notify('❌ Bölüm işleme hatası: ' + e.message, 'error');
-            }
-        };
-
-        // ----- Bölüm oynatma -----
         app.playEpisode = function(ep, series) {
-            try {
-                var serverUrl = this.state.creds.serverUrl;
-                var username = this.state.creds.username;
-                var password = this.state.creds.password;
-                var ext = ep.container_extension || ep.ext || 'mp4';
-                var epId = ep.id || ep.stream_id || ep.num || ep.episode_id || '';
-                if (!epId) {
-                    this.notify('❌ Bölüm ID bulunamadı', 'error');
-                    return;
-                }
-                var url = serverUrl + '/series/' + username + '/' + password + '/' + epId + '.' + ext;
-                var seasonNum = ep.season || ep.season_number || ep.season_no || 1;
-                var episodeNum = ep.episode_num || ep.episode_number || ep.num || ep.id || 1;
-                this.playStream(url, series.name + ' - S' + seasonNum + 'E' + episodeNum, series.category_id);
-            } catch (e) {
-                console.error('playEpisode hatası:', e);
-                this.notify('Bölüm oynatma hatası: ' + e.message, 'error');
-            }
+            var serverUrl = this.state.creds.serverUrl;
+            var username = this.state.creds.username;
+            var password = this.state.creds.password;
+            var ext = ep.container_extension || 'mp4';
+            var url = serverUrl + '/series/' + username + '/' + password + '/' + ep.id + '.' + ext;
+            this.playStream(url, series.name + ' - S' + ep.season + 'E' + ep.episode_num, series.category_id);
         };
 
         app.play = function(ch) {
-            try {
-                var serverUrl = this.state.creds.serverUrl;
-                var username = this.state.creds.username;
-                var password = this.state.creds.password;
-                var type = this.state.type;
-                var url = '';
-                var streamId = ch.stream_id || ch.id || ch.num || '';
-                if (!streamId) {
-                    this.notify('❌ Geçersiz kanal ID', 'error');
-                    return;
-                }
-                if (type === 'live') {
-                    url = serverUrl + '/live/' + username + '/' + password + '/' + streamId + '.m3u8';
-                } else if (type === 'movies') {
-                    var ext = ch.container_extension || 'mp4';
-                    url = serverUrl + '/movie/' + username + '/' + password + '/' + streamId + '.' + ext;
-                } else if (type === 'series') {
-                    this.showEpisodes(ch);
-                    return;
-                }
-                this.playStream(url, ch.name || ch.title, ch.category_id);
-            } catch (e) {
-                console.error('play hatası:', e);
-                this.notify('Oynatma hatası: ' + e.message, 'error');
+            var serverUrl = this.state.creds.serverUrl;
+            var username = this.state.creds.username;
+            var password = this.state.creds.password;
+            var type = this.state.type;
+            var url = '';
+            if (type === 'live') {
+                url = serverUrl + '/live/' + username + '/' + password + '/' + ch.stream_id + '.m3u8';
+            } else if (type === 'movies') {
+                var ext = ch.container_extension || 'mp4';
+                url = serverUrl + '/movie/' + username + '/' + password + '/' + ch.stream_id + '.' + ext;
             }
+            this.playStream(url, ch.name || ch.title, ch.category_id);
         };
 
         app.playStream = function(url, name, catId) {
-            try {
-                var player = document.getElementById('player');
-                var placeholder = document.getElementById('placeholder');
-                var info = document.getElementById('videoInfo');
-                if (this.state.hls) {
-                    this.state.hls.destroy();
-                    this.state.hls = null;
-                }
-                player.pause();
-                player.src = '';
-                player.load();
-                player.classList.remove('hidden');
-                placeholder.classList.add('hidden');
-                info.classList.remove('hidden');
-                document.getElementById('channelName').textContent = name;
-                document.getElementById('channelCat').textContent = this.getCatName(catId);
-                this.notify('📺 Oynatılıyor: ' + name, 'info');
-                var self = this;
-                setTimeout(function() {
-                    try {
-                        if (url.indexOf('.m3u8') !== -1) {
-                            if (typeof Hls !== 'undefined' && Hls.isSupported()) {
-                                self.state.hls = new Hls({ enableWorker: true, lowLatencyMode: true });
-                                self.state.hls.loadSource(url);
-                                self.state.hls.attachMedia(player);
-                                self.state.hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                                    player.play()['catch'](function() { self.notify('❌ Oynatma başarısız', 'error'); });
-                                });
-                                self.state.hls.on(Hls.Events.ERROR, function(e, data) {
-                                    if (data.fatal) self.notify('❌ Akış hatası oluştu: ' + (data.details || ''), 'error');
-                                });
-                            } else {
-                                self.notify('⚠️ HLS.js yok, doğrudan oynatmayı deniyorum.', 'warning');
-                                player.src = url;
-                                player.load();
-                                player.play()['catch'](function() { self.notify('❌ Oynatma başarısız (yerel HLS desteklenmiyor olabilir).', 'error'); });
-                            }
-                        } else {
-                            player.src = url;
-                            player.load();
-                            player.play()['catch'](function() { self.notify('❌ Oynatma başarısız', 'error'); });
-                        }
-                    } catch (e) {
-                        console.error('playStream timeout hatası:', e);
-                        self.notify('Oynatma hatası: ' + e.message, 'error');
-                    }
-                }, 100);
-            } catch (e) {
-                console.error('playStream hatası:', e);
-                this.notify('Oynatma hatası: ' + e.message, 'error');
+            var player = document.getElementById('player');
+            var placeholder = document.getElementById('placeholder');
+            var info = document.getElementById('videoInfo');
+
+            if (this.state.hls) {
+                this.state.hls.destroy();
+                this.state.hls = null;
             }
+
+            player.pause();
+            player.src = '';
+            player.load();
+
+            player.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+            info.classList.remove('hidden');
+
+            document.getElementById('channelName').textContent = name;
+            document.getElementById('channelCat').textContent = this.getCatName(catId);
+
+            this.notify('📺 Oynatılıyor: ' + name, 'info');
+
+            var self = this;
+            setTimeout(function() {
+                if (url.indexOf('.m3u8') !== -1) {
+                    if (Hls && Hls.isSupported()) {
+                        self.state.hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+                        self.state.hls.loadSource(url);
+                        self.state.hls.attachMedia(player);
+                        self.state.hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                            player.play()['catch'](function() { self.notify('❌ Oynatma başarısız', 'error'); });
+                        });
+                        self.state.hls.on(Hls.Events.ERROR, function(e, data) {
+                            if (data.fatal) self.notify('❌ Akış hatası oluştu', 'error');
+                        });
+                    } else {
+                        self.notify('❌ HLS desteklenmiyor', 'error');
+                    }
+                } else {
+                    player.src = url;
+                    player.load();
+                    player.play()['catch'](function() { self.notify('❌ Oynatma başarısız', 'error'); });
+                }
+            }, 100);
         };
 
         app.getCatName = function(id) {
-            try {
-                for (var i = 0; i < this.state.categories.length; i++) {
-                    if (this.state.categories[i].category_id == id) return this.state.categories[i].category_name;
+            for (var i = 0; i < this.state.categories.length; i++) {
+                if (this.state.categories[i].category_id == id) {
+                    return this.state.categories[i].category_name;
                 }
-                return 'Bilinmiyor';
-            } catch (e) {
-                return 'Bilinmiyor';
             }
+            return 'Bilinmiyor';
         };
 
         app.getId = function(ch) {
-            try {
-                return String(ch.stream_id || ch.series_id || ch.num || ch.id || Math.random());
-            } catch (e) {
-                return String(Math.random());
-            }
+            return String(ch.stream_id || ch.series_id || ch.num || Math.random());
         };
 
         app.toggleFav = function(id) {
-            try {
-                var idx = this.state.favorites.indexOf(id);
-                if (idx !== -1) {
-                    this.state.favorites.splice(idx, 1);
-                    this.notify('⭐ Favorilerden çıkarıldı', 'info');
-                } else {
-                    this.state.favorites.push(id);
-                    this.notify('⭐ Favorilere eklendi', 'success');
-                }
-                this.saveFavorites();
-                this.updateFavCount();
-                this.renderChannels();
-            } catch (e) {
-                console.error('toggleFav hatası:', e);
+            var idx = this.state.favorites.indexOf(id);
+            if (idx !== -1) {
+                this.state.favorites.splice(idx, 1);
+                this.notify('⭐ Favorilerden çıkarıldı', 'info');
+            } else {
+                this.state.favorites.push(id);
+                this.notify('⭐ Favorilere eklendi', 'success');
             }
+            this.saveFavorites();
+            this.updateFavCount();
+            this.renderChannels();
         };
 
         app.updateFavCount = function() {
-            try {
-                document.getElementById('favCount').textContent = this.state.favorites.length;
-            } catch (e) {
-                console.error('updateFavCount hatası:', e);
-            }
+            document.getElementById('favCount').textContent = this.state.favorites.length;
         };
 
         app.saveFavorites = function() {
-            try {
-                localStorage.setItem('iptv_fav', JSON.stringify(this.state.favorites));
-            } catch (e) {
-                console.error('saveFavorites hatası:', e);
-            }
+            localStorage.setItem('iptv_fav', JSON.stringify(this.state.favorites));
         };
 
         app.loadFavorites = function() {
-            try {
-                var saved = localStorage.getItem('iptv_fav');
-                if (saved) {
+            var saved = localStorage.getItem('iptv_fav');
+            if (saved) {
+                try {
                     this.state.favorites = JSON.parse(saved);
                     if (!Array.isArray(this.state.favorites)) this.state.favorites = [];
-                } else {
+                } catch (e) {
                     this.state.favorites = [];
                 }
-            } catch (e) {
+            } else {
                 this.state.favorites = [];
             }
         };
 
         app.showFavorites = function() {
             var self = this;
-            try {
-                var favs = [];
-                for (var i = 0; i < this.state.allChannels.length; i++) {
-                    var ch = this.state.allChannels[i];
-                    if (this.state.favorites.indexOf(this.getId(ch)) !== -1) {
-                        favs.push(ch);
-                    }
+            var favs = [];
+            for (var i = 0; i < this.state.allChannels.length; i++) {
+                var ch = this.state.allChannels[i];
+                if (this.state.favorites.indexOf(this.getId(ch)) !== -1) {
+                    favs.push(ch);
                 }
-                var list = document.getElementById('favList');
-                if (favs.length === 0) {
-                    list.innerHTML = '<div class="text-center text-small">Henüz favori yok<br><br>Eklemek için kanalları yıldızlayın</div>';
-                } else {
-                    var html = '';
-                    for (var j = 0; j < favs.length; j++) {
-                        var ch = favs[j];
-                        var name = this.escape(ch.name || ch.title || 'Bilinmiyor');
-                        var chJson = JSON.stringify(ch).replace(/'/g, '&apos;');
-                        html += '<div class="channel-item" data-ch=\'' + chJson + '\'>' +
-                            '<h3 class="channel-name">' + name + '</h3>' +
-                            '<span class="badge badge-success">⭐ Favori</span>' +
-                            '</div>';
-                    }
-                    list.innerHTML = html;
-                    var items = list.querySelectorAll('.channel-item');
-                    for (var k = 0; k < items.length; k++) {
-                        (function(item) {
-                            item.addEventListener('click', function() {
-                                try {
-                                    var ch = JSON.parse(item.dataset.ch);
-                                    if (self.state.type === 'series') {
-                                        self.showEpisodes(ch);
-                                    } else {
-                                        self.play(ch);
-                                    }
-                                    self.closeModal('favModal');
-                                } catch (e) {
-                                    console.error('Favori tıklama hatası:', e);
-                                    self.notify('Favori oynatma hatası: ' + e.message, 'error');
-                                }
-                            });
-                        })(items[k]);
-                    }
-                }
-                document.getElementById('favModal').classList.add('active');
-                this.notify('⭐ ' + favs.length + ' favori kanal gösteriliyor', 'info');
-            } catch (e) {
-                console.error('showFavorites hatası:', e);
-                this.notify('Favoriler gösterilemedi: ' + e.message, 'error');
             }
+            var list = document.getElementById('favList');
+            if (favs.length === 0) {
+                list.innerHTML = '<div class="text-center text-small">Henüz favori yok<br><br>Eklemek için kanalları yıldızlayın</div>';
+            } else {
+                var html = '';
+                for (var j = 0; j < favs.length; j++) {
+                    var ch = favs[j];
+                    var name = this.escape(ch.name || ch.title || 'Bilinmiyor');
+                    var chJson = JSON.stringify(ch).replace(/'/g, '&apos;');
+                    html += '<div class="channel-item" data-ch=\'' + chJson + '\'>' +
+                        '<h3 class="channel-name">' + name + '</h3>' +
+                        '<span class="badge badge-success">⭐ Favori</span>' +
+                        '</div>';
+                }
+                list.innerHTML = html;
+
+                var items = list.querySelectorAll('.channel-item');
+                for (var k = 0; k < items.length; k++) {
+                    (function(item) {
+                        item.addEventListener('click', function() {
+                            var ch = JSON.parse(item.dataset.ch);
+                            if (self.state.type === 'series') {
+                                self.showEpisodes(ch);
+                            } else {
+                                self.play(ch);
+                            }
+                            self.closeModal('favModal');
+                        });
+                    })(items[k]);
+                }
+            }
+            document.getElementById('favModal').classList.add('active');
+            this.notify('⭐ ' + favs.length + ' favori kanal gösteriliyor', 'info');
         };
 
+        // ----- Paylaşım -----
         app.showShare = function() {
-            try {
-                this.resetShare();
-                document.getElementById('shareModal').classList.add('active');
-            } catch (e) {
-                console.error('showShare hatası:', e);
-            }
+            this.resetShare();
+            document.getElementById('shareModal').classList.add('active');
         };
 
         app.resetShare = function() {
-            try {
-                document.getElementById('shareStep1').classList.remove('hidden');
-                document.getElementById('shareStep2').classList.add('hidden');
-                document.getElementById('sharePassword').value = '';
-            } catch (e) {
-                console.error('resetShare hatası:', e);
-            }
+            document.getElementById('shareStep1').classList.remove('hidden');
+            document.getElementById('shareStep2').classList.add('hidden');
+            document.getElementById('sharePassword').value = '';
         };
 
         app.generateUrl = function() {
+            var self = this;
+            var password = document.getElementById('sharePassword').value;
+            if (!password || password.length < 4) {
+                this.notify('⚠️ Parola en az 4 karakter olmalıdır', 'warning');
+                return;
+            }
             try {
-                var password = document.getElementById('sharePassword').value;
-                if (!password || password.length < 4) {
-                    this.notify('⚠️ Parola en az 4 karakter olmalıdır', 'warning');
-                    return;
-                }
                 this.notify('🔒 Şifreli URL oluşturuluyor...', 'info');
+
                 var baseUrl = '';
                 if (location.protocol === 'file:') {
                     baseUrl = location.href.split('?')[0];
                 } else {
                     baseUrl = location.origin + location.pathname;
                 }
+
                 var config = {
                     credentials: this.state.creds,
                     favorites: this.state.favorites
                 };
                 var encrypted = encryptData(JSON.stringify(config), password);
                 var url = baseUrl + '?config=' + encodeURIComponent(encrypted);
+
                 document.getElementById('shareUrl').textContent = url;
                 document.getElementById('sharePass').textContent = password;
                 document.getElementById('shareStep1').classList.add('hidden');
@@ -1591,8 +1282,8 @@
         };
 
         app.copyUrl = function() {
+            var url = document.getElementById('shareUrl').textContent;
             try {
-                var url = document.getElementById('shareUrl').textContent;
                 if (navigator.clipboard && navigator.clipboard.writeText) {
                     navigator.clipboard.writeText(url)['catch'](function() { self.fallbackCopy(url); });
                 } else {
@@ -1606,163 +1297,121 @@
         };
 
         app.fallbackCopy = function(text) {
-            try {
-                var textarea = document.createElement('textarea');
-                textarea.value = text;
-                textarea.style.position = 'fixed';
-                textarea.style.opacity = '0';
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-            } catch (e) {
-                console.error('fallbackCopy hatası:', e);
-            }
+            var textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
         };
 
         app.testUrl = function() {
-            try {
-                var url = document.getElementById('shareUrl').textContent;
-                window.open(url, '_blank');
-                this.notify('🔗 URL yeni sekmede açılıyor...', 'info');
-            } catch (e) {
-                console.error('testUrl hatası:', e);
-            }
+            var url = document.getElementById('shareUrl').textContent;
+            window.open(url, '_blank');
+            this.notify('🔗 URL yeni sekmede açılıyor...', 'info');
         };
 
+        // ----- Diğer -----
         app.switchType = function(type) {
-            try {
-                this.state.type = type;
-                this.state.category = 'all';
-                this.state.search = '';
-                document.getElementById('searchInput').value = '';
-                var tabs = document.querySelectorAll('.tab');
-                for (var i = 0; i < tabs.length; i++) {
-                    var btn = tabs[i];
-                    if (btn.dataset.type === type) {
-                        btn.classList.remove('inactive');
-                        btn.classList.add('active');
-                    } else {
-                        btn.classList.remove('active');
-                        btn.classList.add('inactive');
-                    }
+            this.state.type = type;
+            this.state.category = 'all';
+            this.state.search = '';
+            document.getElementById('searchInput').value = '';
+
+            var tabs = document.querySelectorAll('.tab');
+            for (var i = 0; i < tabs.length; i++) {
+                var btn = tabs[i];
+                if (btn.dataset.type === type) {
+                    btn.classList.remove('inactive');
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                    btn.classList.add('inactive');
                 }
-                this.notify('📺 ' + (type === 'live' ? 'Canlı TV' : type === 'movies' ? 'Filmler' : 'Diziler') + "'e geçiliyor...", 'info');
-                this.loadCategories();
-                this.loadChannels();
-            } catch (e) {
-                console.error('switchType hatası:', e);
-                this.notify('Sekme değiştirme hatası: ' + e.message, 'error');
             }
+
+            this.notify('📺 ' + (type === 'live' ? 'Canlı TV' : type === 'movies' ? 'Filmler' : 'Diziler') + "'e geçiliyor...", 'info');
+            this.loadCategories();
+            this.loadChannels();
         };
 
         app.changeCategory = function(cat) {
-            try {
-                this.state.category = cat;
-                this.notify('📂 Kategori yükleniyor...', 'info');
-                this.loadChannels();
-            } catch (e) {
-                console.error('changeCategory hatası:', e);
-            }
+            this.state.category = cat;
+            this.notify('📂 Kategori yükleniyor...', 'info');
+            this.loadChannels();
         };
 
         app.handleSearch = function(query) {
-            try {
-                this.state.search = query.trim();
-                if (this.state.search) {
-                    var results = [];
-                    for (var i = 0; i < this.state.allChannels.length; i++) {
-                        var c = this.state.allChannels[i];
-                        var name = (c.name || c.title || '').toLowerCase();
-                        if (name.indexOf(this.state.search.toLowerCase()) !== -1) {
-                            results.push(c);
-                        }
+            this.state.search = query.trim();
+            if (this.state.search) {
+                var results = [];
+                for (var i = 0; i < this.state.allChannels.length; i++) {
+                    var c = this.state.allChannels[i];
+                    var name = (c.name || c.title || '').toLowerCase();
+                    if (name.indexOf(this.state.search.toLowerCase()) !== -1) {
+                        results.push(c);
                     }
-                    this.state.channels = results;
-                    this.notify('🔍 ' + this.state.allChannels.length + ' kanal aranıyor...', 'info');
-                } else {
-                    this.state.channels = this.state.allChannels.slice(0);
                 }
-                this.resetPage();
-                this.renderChannels();
-            } catch (e) {
-                console.error('handleSearch hatası:', e);
+                this.state.channels = results;
+                this.notify('🔍 ' + this.state.allChannels.length + ' kanal aranıyor...', 'info');
+            } else {
+                this.state.channels = this.state.allChannels.slice(0);
             }
+            this.resetPage();
+            this.renderChannels();
         };
 
         app.buildUrl = function(endpoint, params) {
-            try {
-                var creds = this.state.creds;
-                var base = 'username=' + encodeURIComponent(creds.username) + '&password=' + encodeURIComponent(creds.password);
-                var all = params ? base + '&' + params : base;
-                return creds.serverUrl + '/' + endpoint + '?' + all;
-            } catch (e) {
-                console.error('buildUrl hatası:', e);
-                return '';
-            }
+            var creds = this.state.creds;
+            var base = 'username=' + encodeURIComponent(creds.username) + '&password=' + encodeURIComponent(creds.password);
+            var all = params ? base + '&' + params : base;
+            return creds.serverUrl + '/' + endpoint + '?' + all;
         };
 
         app.logout = function() {
-            try {
-                this.state.creds = null;
-                this.state.userInfo = null;
-                this.state.channels = [];
-                this.state.allChannels = [];
-                this.state.categories = [];
-                this.state.cache = {};
-                if (this.state.hls) {
-                    this.state.hls.destroy();
-                    this.state.hls = null;
-                }
-                document.getElementById('mainApp').classList.add('hidden');
-                document.getElementById('loginModal').classList.add('active');
-                document.getElementById('player').src = '';
-                this.notify('👋 Başarıyla çıkış yapıldı', 'info');
-                this.renderPanelList();
-            } catch (e) {
-                console.error('logout hatası:', e);
+            this.state.creds = null;
+            this.state.userInfo = null;
+            this.state.channels = [];
+            this.state.allChannels = [];
+            this.state.categories = [];
+            this.state.cache = {};
+            if (this.state.hls) {
+                this.state.hls.destroy();
+                this.state.hls = null;
             }
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('loginModal').classList.add('active');
+            document.getElementById('player').src = '';
+            this.notify('👋 Başarıyla çıkış yapıldı', 'info');
+            this.renderPanelList();
         };
 
         app.closeModal = function(id) {
-            try {
-                document.getElementById(id).classList.remove('active');
-            } catch (e) {
-                console.error('closeModal hatası:', e);
-            }
+            document.getElementById(id).classList.remove('active');
         };
 
         app.notify = function(msg, type) {
-            try {
-                type = type || 'info';
-                var div = document.createElement('div');
-                div.className = 'notification ' + type;
-                div.textContent = msg;
-                document.getElementById('notifications').appendChild(div);
-                var self = this;
-                setTimeout(function() {
-                    try {
-                        div.classList.add('hiding');
-                        setTimeout(function() { div.remove(); }, 300);
-                    } catch (e) {
-                        console.error('notification timeout hatası:', e);
-                    }
-                }, 3500);
-            } catch (e) {
-                console.error('notify hatası:', e);
-            }
+            type = type || 'info';
+            var div = document.createElement('div');
+            div.className = 'notification ' + type;
+            div.textContent = msg;
+            document.getElementById('notifications').appendChild(div);
+            var self = this;
+            setTimeout(function() {
+                div.classList.add('hiding');
+                setTimeout(function() { div.remove(); }, 300);
+            }, 3500);
         };
 
         app.escape = function(str) {
-            try {
-                var div = document.createElement('div');
-                div.textContent = str;
-                return div.innerHTML;
-            } catch (e) {
-                return str;
-            }
+            var div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
         };
 
+        // ----- Başlat -----
         document.addEventListener('DOMContentLoaded', function() {
             app.init();
         });
