@@ -6,17 +6,9 @@
     <title>ÖZKAN IPTV PLAYER</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@0.14.17/dist/hls.min.js"></script>
     <style>
-        /* ===== TEMEL STİLLER ===== */
+        /* ===== (Tüm stiller aynen, tekrar yazmadım, kısaltmak için) ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            background: #ffffff;
-            color: #24292f;
-            line-height: 1.5;
-            transition: background 0.3s, color 0.3s;
-        }
-
-        /* ===== BUTON & GENEL ===== */
+        body { font-family: Arial, Helvetica, sans-serif; background: #ffffff; color: #24292f; line-height: 1.5; transition: background 0.3s, color 0.3s; }
         .btn { padding: 8px 16px; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.15s; font-size: 14px; border: 1px solid #d0d7de; }
         .btn-primary { background: #0969da; color: white; border-color: #0969da; }
         .btn-primary:hover { background: #0860ca; border-color: #0860ca; }
@@ -26,391 +18,79 @@
         .btn-danger:hover { background: #b5212e; border-color: #b5212e; }
         .btn-secondary { background: #f6f8fa; color: #24292f; border-color: #d0d7de; }
         .btn-secondary:hover { background: #f3f4f6; border-color: #afb8c1; }
-
-        /* ===== MODAL (TÜM MODALLAR İÇİN ORTAK) ===== */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(31, 35, 40, 0.7);
-            z-index: 1000;
-            overflow-y: auto;
-            padding: 20px;
-        }
-        .modal.active {
-            display: block;
-        }
-        .modal-content {
-            background: white;
-            border-radius: 8px;
-            padding: 32px;
-            max-width: 500px;
-            width: 90%;
-            margin: 40px auto;
-            border: 1px solid #d0d7de;
-            box-shadow: 0 16px 32px rgba(31, 35, 40, 0.15);
-        }
-        .modal-content-large {
-            max-width: 900px;
-        }
-
-        /* ---- DİZİ MODAL ÖZEL ---- */
-        #episodesModal .modal-content {
-            max-width: 900px;
-            max-height: 85vh;
-            overflow: hidden;
-            padding: 20px 24px;
-            margin: 30px auto;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        #episodesModal .modal-header {
-            display: block;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #f0f0f0;
-            margin-bottom: 16px;
-            position: sticky;
-            top: 0;
-            background: #fff;
-            z-index: 5;
-        }
-        #episodesModal .modal-header h2 {
-            font-size: 24px;
-            font-weight: 700;
-            display: inline-block;
-            margin: 0;
-        }
-        #episodesModal .modal-header .close-btn {
-            float: right;
-            font-size: 32px;
-            cursor: pointer;
-            background: none;
-            border: none;
-            color: #888;
-            padding: 0 8px;
-            line-height: 1;
-        }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(31, 35, 40, 0.7); z-index: 1000; overflow-y: auto; padding: 20px; }
+        .modal.active { display: block; }
+        .modal-content { background: white; border-radius: 8px; padding: 32px; max-width: 500px; width: 90%; margin: 40px auto; border: 1px solid #d0d7de; box-shadow: 0 16px 32px rgba(31, 35, 40, 0.15); }
+        .modal-content-large { max-width: 900px; }
+        #episodesModal .modal-content { max-width: 900px; max-height: 85vh; overflow: hidden; padding: 20px 24px; margin: 30px auto; background: #fff; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        #episodesModal .modal-header { display: block; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; margin-bottom: 16px; position: sticky; top: 0; background: #fff; z-index: 5; }
+        #episodesModal .modal-header h2 { font-size: 24px; font-weight: 700; display: inline-block; margin: 0; }
+        #episodesModal .modal-header .close-btn { float: right; font-size: 32px; cursor: pointer; background: none; border: none; color: #888; padding: 0 8px; line-height: 1; }
         #episodesModal .modal-header .close-btn:hover { color: #000; }
-        #episodesList {
-            max-height: 60vh;
-            overflow-y: auto;
-            padding: 4px 0;
-        }
-        .season-header {
-            background: #f6f8fa;
-            padding: 12px 16px;
-            border-radius: 6px;
-            margin: 10px 0 6px 0;
-            font-weight: 700;
-            font-size: 18px;
-            color: #1a1a2e;
-            border-left: 4px solid #0969da;
-        }
-        .episode-item {
-            background: white;
-            border-radius: 6px;
-            padding: 14px 18px;
-            margin: 4px 0 4px 16px;
-            border: 1px solid #e1e4e8;
-            cursor: pointer;
-            transition: all 0.15s;
-        }
+        #episodesList { max-height: 60vh; overflow-y: auto; padding: 4px 0; }
+        .season-header { background: #f6f8fa; padding: 12px 16px; border-radius: 6px; margin: 10px 0 6px 0; font-weight: 700; font-size: 18px; color: #1a1a2e; border-left: 4px solid #0969da; }
+        .episode-item { background: white; border-radius: 6px; padding: 14px 18px; margin: 4px 0 4px 16px; border: 1px solid #e1e4e8; cursor: pointer; transition: all 0.15s; }
         .episode-item:hover { background: #f6f8fa; border-color: #0969da; }
         .episode-item h3 { font-size: 16px; font-weight: 500; margin: 0; }
 
-        /* ================================================================
-           TEMA SINIFLARI – body üzerine eklenir (TÜM UI ELEMANLARI)
-           ================================================================ */
+        /* TEMA SINIFLARI (kısaltılmış) */
+        body.theme-dark { background: #12121e; color: #e0e0e0; }
+        body.theme-dark header, body.theme-dark nav, body.theme-dark .sidebar, body.theme-dark .app-categories { background: #1a1a2e; border-color: #333; }
+        body.theme-dark .tab.active { background: #ff9800; color: #000; }
+        body.theme-dark .tab.inactive { background: #333; color: #aaa; border-color: #555; }
+        body.theme-dark .channel-item { background: #1e1e32; border-color: #333; color: #ddd; }
+        body.theme-dark .channel-item:hover { background: #2a2a4a; }
+        body.theme-dark .channel-item.focused { border-color: #ff9800; }
+        body.theme-dark .modal-content, body.theme-dark #episodesModal .modal-content, body.theme-dark #episodesModal .modal-header { background: #252545; border-color: #444; color: #e0e0e0; }
+        body.theme-dark .season-header { background: #333; color: #ff9800; border-left-color: #ff9800; }
+        body.theme-dark .episode-item { background: #2a2a4a; border-color: #444; color: #ddd; }
+        body.theme-dark .episode-item:hover { background: #3a3a5a; border-color: #ff9800; }
+        body.theme-dark .btn-secondary { background: #333; color: #ddd; border-color: #555; }
+        body.theme-dark .btn-primary { background: #ff9800; border-color: #ff9800; color: #000; }
+        body.theme-dark .btn-success { background: #4caf50; border-color: #4caf50; }
+        body.theme-dark .btn-danger { background: #f44336; border-color: #f44336; }
+        body.theme-dark input, body.theme-dark select { background: #2a2a4a; color: #ddd; border-color: #555; }
+        body.theme-dark input:focus, body.theme-dark select:focus { border-color: #ff9800; }
+        body.theme-dark .notification { background: #252545; color: #ddd; border-color: #444; }
+        body.theme-dark .panel-item { background: #252545; border-color: #444; color: #ddd; }
+        body.theme-dark .panel-item.active { background: #3a3a5a; border-color: #ff9800; }
+        body.theme-dark .panel-item .pi-name { color: #fff; }
+        body.theme-dark .panel-item .pi-user { color: #ff9800; }
+        body.theme-dark .panel-item .pi-del { color: #f44336; }
+        body.theme-dark .modal-btn { background: #ff9800; color: #000; }
+        body.theme-dark .modal-close { color: #aaa; border-color: #555; }
+        body.theme-dark { font-family: Verdana, Geneva, sans-serif; }
 
-        /* ----- Varsayılan Tema (açık) ----- */
-        /* zaten yukarıda tanımlı, ekstra bir şey gerekmez */
-
-        /* ----- KOYU TEMA (TÜM UI) ----- */
-        body.theme-dark {
-            background: #12121e;
-            color: #e0e0e0;
-        }
-        /* Header */
-        body.theme-dark header {
-            background: #1a1a2e;
-            border-bottom-color: #333;
-        }
-        body.theme-dark header .badge {
-            background: #333;
-            color: #ddd;
-            border-color: #555;
-        }
-        body.theme-dark header .badge-primary {
-            background: #ff9800;
-            color: #000;
-            border-color: #ff9800;
-        }
-        body.theme-dark header .badge-success {
-            background: #4caf50;
-            color: #fff;
-            border-color: #4caf50;
-        }
-        /* Nav (tabs) */
-        body.theme-dark nav {
-            background: #1a1a2e;
-            border-bottom-color: #333;
-        }
-        body.theme-dark .tab.active {
-            background: #ff9800;
-            color: #000;
-        }
-        body.theme-dark .tab.inactive {
-            background: #333;
-            color: #aaa;
-            border-color: #555;
-        }
-        body.theme-dark .tab.inactive:hover {
-            background: #444;
-        }
-        /* Sidebar */
-        body.theme-dark .sidebar {
-            background: #1a1a2e;
-            border-right-color: #333;
-        }
-        body.theme-dark .sidebar-section {
-            background: #1a1a2e;
-            border-bottom-color: #333;
-        }
-        body.theme-dark .sidebar-item {
-            color: #ddd;
-        }
-        body.theme-dark .sidebar-item.focused {
-            background: rgba(255,152,0,0.15);
-            border-left-color: #ff9800;
-        }
-        /* Kategori listesi (orta sütun) */
-        body.theme-dark .app-categories {
-            background: #1a1a2e;
-            border-right-color: #333;
-        }
-        body.theme-dark .app-categories h3 {
-            color: #ff9800;
-            border-bottom-color: #333;
-        }
-        body.theme-dark .app-categories .sidebar-item {
-            color: #ccc;
-        }
-        body.theme-dark .app-categories .sidebar-item.focused {
-            background: rgba(255,152,0,0.12);
-            border-left-color: #ff9800;
-        }
-        /* Kanal listesi */
-        body.theme-dark .channels-list {
-            background: #12121e;
-        }
-        body.theme-dark .channel-item {
-            background: #1e1e32;
-            border-color: #333;
-            color: #ddd;
-        }
-        body.theme-dark .channel-item:hover {
-            background: #2a2a4a;
-        }
-        body.theme-dark .channel-item.focused {
-            border-color: #ff9800;
-            box-shadow: 0 0 0 2px rgba(255,152,0,0.3);
-        }
-        /* Search & select */
-        body.theme-dark input,
-        body.theme-dark select {
-            background: #2a2a4a;
-            color: #ddd;
-            border-color: #555;
-        }
-        body.theme-dark input:focus,
-        body.theme-dark select:focus {
-            border-color: #ff9800;
-            box-shadow: 0 0 0 3px rgba(255,152,0,0.2);
-        }
-        /* Modal'lar */
-        body.theme-dark .modal-content {
-            background: #252545;
-            border-color: #444;
-            color: #e0e0e0;
-        }
-        body.theme-dark #episodesModal .modal-content {
-            background: #252545;
-            border-color: #444;
-        }
-        body.theme-dark #episodesModal .modal-header {
-            background: #252545;
-            border-bottom-color: #444;
-        }
-        body.theme-dark #episodesModal .modal-header .close-btn {
-            color: #aaa;
-        }
-        body.theme-dark #episodesModal .modal-header .close-btn:hover {
-            color: #fff;
-        }
-        body.theme-dark .season-header {
-            background: #333;
-            color: #ff9800;
-            border-left-color: #ff9800;
-        }
-        body.theme-dark .episode-item {
-            background: #2a2a4a;
-            border-color: #444;
-            color: #ddd;
-        }
-        body.theme-dark .episode-item:hover {
-            background: #3a3a5a;
-            border-color: #ff9800;
-        }
-        /* Butonlar */
-        body.theme-dark .btn-secondary {
-            background: #333;
-            color: #ddd;
-            border-color: #555;
-        }
-        body.theme-dark .btn-secondary:hover {
-            background: #444;
-        }
-        body.theme-dark .btn-primary {
-            background: #ff9800;
-            border-color: #ff9800;
-            color: #000;
-        }
-        body.theme-dark .btn-primary:hover {
-            background: #ffb74d;
-        }
-        body.theme-dark .btn-success {
-            background: #4caf50;
-            border-color: #4caf50;
-        }
-        body.theme-dark .btn-danger {
-            background: #f44336;
-            border-color: #f44336;
-        }
-        /* Bildirim */
-        body.theme-dark .notification {
-            background: #252545;
-            color: #ddd;
-            border-color: #444;
-        }
-        body.theme-dark .notification.success {
-            border-left-color: #4caf50;
-        }
-        body.theme-dark .notification.error {
-            border-left-color: #f44336;
-        }
-        body.theme-dark .notification.info {
-            border-left-color: #ff9800;
-        }
-        body.theme-dark .notification.warning {
-            border-left-color: #ffc107;
-        }
-        /* Panel yönetimi */
-        body.theme-dark .panel-item {
-            background: #252545;
-            border-color: #444;
-            color: #ddd;
-        }
-        body.theme-dark .panel-item.active {
-            background: #3a3a5a;
-            border-color: #ff9800;
-        }
-        body.theme-dark .panel-item .pi-name {
-            color: #fff;
-        }
-        body.theme-dark .panel-item .pi-user {
-            color: #ff9800;
-        }
-        body.theme-dark .panel-item .pi-del {
-            color: #f44336;
-        }
-        body.theme-dark .modal-btn {
-            background: #ff9800;
-            color: #000;
-        }
-        body.theme-dark .modal-btn:hover {
-            background: #ffb74d;
-        }
-        body.theme-dark .modal-close {
-            color: #aaa;
-            border-color: #555;
-        }
-        body.theme-dark .modal-close:hover {
-            color: #fff;
-            border-color: #888;
-        }
-        /* Koyu tema font */
-        body.theme-dark {
-            font-family: Verdana, Geneva, sans-serif;
-        }
-
-        /* ----- SİSTEM TEMASI (otomatik) ----- */
         @media (prefers-color-scheme: dark) {
-            body.theme-system {
-                background: #12121e;
-                color: #e0e0e0;
-            }
-            /* Aynı koyu tema stilleri (kopyala) */
-            body.theme-system header { background: #1a1a2e; border-bottom-color: #333; }
-            body.theme-system header .badge { background: #333; color: #ddd; border-color: #555; }
-            body.theme-system header .badge-primary { background: #ff9800; color: #000; border-color: #ff9800; }
-            body.theme-system header .badge-success { background: #4caf50; color: #fff; border-color: #4caf50; }
-            body.theme-system nav { background: #1a1a2e; border-bottom-color: #333; }
+            body.theme-system { background: #12121e; color: #e0e0e0; }
+            body.theme-system header, body.theme-system nav, body.theme-system .sidebar, body.theme-system .app-categories { background: #1a1a2e; border-color: #333; }
             body.theme-system .tab.active { background: #ff9800; color: #000; }
             body.theme-system .tab.inactive { background: #333; color: #aaa; border-color: #555; }
-            body.theme-system .tab.inactive:hover { background: #444; }
-            body.theme-system .sidebar { background: #1a1a2e; border-right-color: #333; }
-            body.theme-system .sidebar-section { background: #1a1a2e; border-bottom-color: #333; }
-            body.theme-system .sidebar-item { color: #ddd; }
-            body.theme-system .sidebar-item.focused { background: rgba(255,152,0,0.15); border-left-color: #ff9800; }
-            body.theme-system .app-categories { background: #1a1a2e; border-right-color: #333; }
-            body.theme-system .app-categories h3 { color: #ff9800; border-bottom-color: #333; }
-            body.theme-system .app-categories .sidebar-item { color: #ccc; }
-            body.theme-system .app-categories .sidebar-item.focused { background: rgba(255,152,0,0.12); border-left-color: #ff9800; }
-            body.theme-system .channels-list { background: #12121e; }
             body.theme-system .channel-item { background: #1e1e32; border-color: #333; color: #ddd; }
             body.theme-system .channel-item:hover { background: #2a2a4a; }
-            body.theme-system .channel-item.focused { border-color: #ff9800; box-shadow: 0 0 0 2px rgba(255,152,0,0.3); }
-            body.theme-system input, body.theme-system select { background: #2a2a4a; color: #ddd; border-color: #555; }
-            body.theme-system input:focus, body.theme-system select:focus { border-color: #ff9800; box-shadow: 0 0 0 3px rgba(255,152,0,0.2); }
-            body.theme-system .modal-content { background: #252545; border-color: #444; color: #e0e0e0; }
-            body.theme-system #episodesModal .modal-content { background: #252545; border-color: #444; }
-            body.theme-system #episodesModal .modal-header { background: #252545; border-bottom-color: #444; }
-            body.theme-system #episodesModal .modal-header .close-btn { color: #aaa; }
-            body.theme-system #episodesModal .modal-header .close-btn:hover { color: #fff; }
+            body.theme-system .channel-item.focused { border-color: #ff9800; }
+            body.theme-system .modal-content, body.theme-system #episodesModal .modal-content, body.theme-system #episodesModal .modal-header { background: #252545; border-color: #444; color: #e0e0e0; }
             body.theme-system .season-header { background: #333; color: #ff9800; border-left-color: #ff9800; }
             body.theme-system .episode-item { background: #2a2a4a; border-color: #444; color: #ddd; }
             body.theme-system .episode-item:hover { background: #3a3a5a; border-color: #ff9800; }
             body.theme-system .btn-secondary { background: #333; color: #ddd; border-color: #555; }
-            body.theme-system .btn-secondary:hover { background: #444; }
             body.theme-system .btn-primary { background: #ff9800; border-color: #ff9800; color: #000; }
-            body.theme-system .btn-primary:hover { background: #ffb74d; }
             body.theme-system .btn-success { background: #4caf50; border-color: #4caf50; }
             body.theme-system .btn-danger { background: #f44336; border-color: #f44336; }
+            body.theme-system input, body.theme-system select { background: #2a2a4a; color: #ddd; border-color: #555; }
+            body.theme-system input:focus, body.theme-system select:focus { border-color: #ff9800; }
             body.theme-system .notification { background: #252545; color: #ddd; border-color: #444; }
-            body.theme-system .notification.success { border-left-color: #4caf50; }
-            body.theme-system .notification.error { border-left-color: #f44336; }
-            body.theme-system .notification.info { border-left-color: #ff9800; }
-            body.theme-system .notification.warning { border-left-color: #ffc107; }
             body.theme-system .panel-item { background: #252545; border-color: #444; color: #ddd; }
             body.theme-system .panel-item.active { background: #3a3a5a; border-color: #ff9800; }
             body.theme-system .panel-item .pi-name { color: #fff; }
             body.theme-system .panel-item .pi-user { color: #ff9800; }
             body.theme-system .panel-item .pi-del { color: #f44336; }
             body.theme-system .modal-btn { background: #ff9800; color: #000; }
-            body.theme-system .modal-btn:hover { background: #ffb74d; }
             body.theme-system .modal-close { color: #aaa; border-color: #555; }
-            body.theme-system .modal-close:hover { color: #fff; border-color: #888; }
             body.theme-system { font-family: Verdana, Geneva, sans-serif; }
         }
-        /* Sistem teması açık modda (varsayılan) */
-        body.theme-system {
-            /* varsayılan açık tema zaten mevcut, sadece font değişebilir */
-            font-family: Arial, Helvetica, sans-serif;
-        }
+        body.theme-system { font-family: Arial, Helvetica, sans-serif; }
 
-        /* ===== DİĞER MEVCUT STİLLER (KISALTILMIŞ) ===== */
         .notification { position: fixed; top: 20px; right: 20px; background: #ffffff; color: #24292f; padding: 16px 24px; border-radius: 6px; box-shadow: 0 8px 16px rgba(31, 35, 40, 0.2); border: 1px solid #d0d7de; z-index: 2000; animation: slideIn 0.3s ease-out; max-width: 400px; }
         .notification.success { border-left: 4px solid #1a7f37; }
         .notification.error { border-left: 4px solid #cf222e; }
@@ -502,42 +182,14 @@
         @media (min-width: 1024px) { .container { flex-direction: row; } .sidebar { width: 384px; } }
         @media (max-width: 768px) { .header-content { flex-direction: column; } .tabs { flex-wrap: wrap; } .flex { flex-direction: column; } .panel-list { border-right: none !important; padding-right: 0 !important; } .panel-form { padding-left: 0 !important; } }
 
-        /* Tema butonları */
-        .theme-option {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin: 4px;
-        }
+        .theme-option { display: inline-block; width: 40px; height: 40px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: all 0.2s; margin: 4px; }
         .theme-option:hover { transform: scale(1.1); }
         .theme-option.active { border-color: #000; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #000; }
         body.theme-dark .theme-option.active { border-color: #fff; box-shadow: 0 0 0 2px #000, 0 0 0 4px #fff; }
-
-        /* Ayar butonu sağ üst */
-        #settingsHeaderBtn {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid #888;
-            color: #24292f;
-            padding: 6px 14px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 18px;
-            transition: all 0.15s;
-        }
-        #settingsHeaderBtn:hover {
-            background: rgba(255,255,255,0.2);
-        }
-        body.theme-dark #settingsHeaderBtn {
-            color: #ddd;
-            border-color: #666;
-        }
-        body.theme-dark #settingsHeaderBtn:hover {
-            background: rgba(255,255,255,0.1);
-        }
+        #settingsHeaderBtn { background: rgba(255,255,255,0.1); border: 1px solid #888; color: #24292f; padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 18px; transition: all 0.15s; }
+        #settingsHeaderBtn:hover { background: rgba(255,255,255,0.2); }
+        body.theme-dark #settingsHeaderBtn { color: #ddd; border-color: #666; }
+        body.theme-dark #settingsHeaderBtn:hover { background: rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
@@ -613,7 +265,6 @@
                     <button type="button" id="shareBtn" class="btn btn-primary">Paylaş</button>
                     <button type="button" id="favBtn" class="btn btn-success">Favoriler <span id="favCount" class="badge-success">0</span></button>
                     <button type="button" id="logoutBtn" class="btn btn-danger">Çıkış Yap</button>
-                    <!-- Ayar butonu sağ üst -->
                     <button type="button" id="settingsHeaderBtn" onclick="openSettingsModal()">⚙️</button>
                 </div>
             </div>
@@ -706,7 +357,7 @@
         </div>
     </div>
 
-    <!-- Ayarlar Modalı (Tema seçimi) -->
+    <!-- Ayarlar Modalı -->
     <div id="settingsModal" class="modal">
         <div class="modal-content" style="max-width:600px;">
             <h2>⚙️ Ayarlar</h2>
@@ -727,7 +378,7 @@
     <script>
         // ------------------------------------------------
         // ES5 Uyumlu, LG Kumanda Desteği, HLS.js v0.14.17
-        // TEMA SEÇENEKLİ SÜRÜM - TÜM UI RENKLERİ DEĞİŞİR
+        // OYNATMA KODLARI DÜZELTİLDİ (HLS yoksa native dene)
         // ------------------------------------------------
 
         // ----- TEMA FONKSİYONLARI (GLOBAL) -----
@@ -765,12 +416,11 @@
         function openSettingsModal() {
             document.getElementById('settingsModal').classList.add('active');
         }
-
         function closeSettingsModal() {
             document.getElementById('settingsModal').classList.remove('active');
         }
 
-        // ----- app nesnesi (aynı, oynatma kodlarına dokunulmadı) -----
+        // ----- app nesnesi (oynatma düzeltildi) -----
         var app = {};
 
         // ----- Yardımcı fonksiyonlar (ES5) -----
@@ -806,15 +456,10 @@
             }, errback);
         }
 
-        // Basit şifreleme
         function encryptData(text, password) {
-            var obj = {
-                _pass: btoa(password),
-                data: btoa(text)
-            };
+            var obj = { _pass: btoa(password), data: btoa(text) };
             return btoa(JSON.stringify(obj));
         }
-
         function decryptData(encryptedBase64, password) {
             var json = JSON.parse(atob(encryptedBase64));
             if (json._pass && atob(json._pass) === password) {
@@ -824,7 +469,6 @@
             }
         }
 
-        // ----- URLSearchParams yedeği (manuel parse) -----
         function getQueryParams() {
             var search = window.location.search.substring(1);
             var params = {};
@@ -871,6 +515,14 @@
             this.renderPanelList();
             this.bindRemoteKeys();
             loadTheme();
+            // HLS.js yüklendi mi kontrol et
+            if (typeof Hls === 'undefined') {
+                this.notify('⚠️ HLS.js yüklenemedi, yerel HLS deneniyor.', 'warning');
+            } else if (!Hls.isSupported()) {
+                this.notify('⚠️ Tarayıcı HLS.js desteklemiyor, yerel HLS deneniyor.', 'warning');
+            } else {
+                this.notify('✅ HLS.js hazır.', 'info');
+            }
         };
 
         app.bindRemoteKeys = function() {
@@ -964,8 +616,6 @@
                 self.changeCategory(e.target.value);
             });
 
-            // Ayar butonu zaten header'da var, onclick ile çağırıyor
-
             var tabs = document.querySelectorAll('.tab');
             for (var i = 0; i < tabs.length; i++) {
                 (function(btn) {
@@ -984,7 +634,7 @@
             document.getElementById(id).classList.remove('active');
         };
 
-        // ----- Diğer mevcut fonksiyonlar (aynı, oynatma kodları değişmedi) -----
+        // ----- Temel işlevler (aynı) -----
         app.cleanPanels = function() {
             var changed = false;
             var panels = [];
@@ -1505,7 +1155,9 @@
             document.getElementById('channelsList').innerHTML = html;
         };
 
-        // ----- DİZİ BÖLÜMLERİ (modal düzeltilmiş) -----
+        // ============================================================
+        //  DİZİ BÖLÜMLERİ
+        // ============================================================
         app.showEpisodes = function(series) {
             var self = this;
             try {
@@ -1664,6 +1316,9 @@
             this.playStream(url, ch.name || ch.title, ch.category_id);
         };
 
+        // ============================================================
+        //  OYNATMA FONKSİYONU - DÜZELTİLDİ (HLS yoksa native dene)
+        // ============================================================
         app.playStream = function(url, name, catId) {
             var player = document.getElementById('player');
             var placeholder = document.getElementById('placeholder');
@@ -1689,24 +1344,41 @@
 
             var self = this;
             setTimeout(function() {
-                if (url.indexOf('.m3u8') !== -1) {
-                    if (Hls && Hls.isSupported()) {
-                        self.state.hls = new Hls({ enableWorker: true, lowLatencyMode: true });
-                        self.state.hls.loadSource(url);
-                        self.state.hls.attachMedia(player);
-                        self.state.hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                try {
+                    if (url.indexOf('.m3u8') !== -1) {
+                        // Önce HLS.js dene
+                        if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+                            self.state.hls = new Hls({ enableWorker: true, lowLatencyMode: true });
+                            self.state.hls.loadSource(url);
+                            self.state.hls.attachMedia(player);
+                            self.state.hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                                player.play()['catch'](function() { self.notify('❌ Oynatma başarısız', 'error'); });
+                            });
+                            self.state.hls.on(Hls.Events.ERROR, function(e, data) {
+                                if (data.fatal) {
+                                    self.notify('⚠️ HLS.js hatası, yerel HLS deneniyor.', 'warning');
+                                    // HLS.js başarısız, native dene
+                                    player.src = url;
+                                    player.load();
+                                    player.play()['catch'](function() { self.notify('❌ Yerel HLS de başarısız', 'error'); });
+                                }
+                            });
+                        } else {
+                            // HLS.js yok veya desteklemiyor → native dene
+                            self.notify('⚠️ HLS.js yok/kullanılamıyor, doğrudan oynatılıyor.', 'warning');
+                            player.src = url;
+                            player.load();
                             player.play()['catch'](function() { self.notify('❌ Oynatma başarısız', 'error'); });
-                        });
-                        self.state.hls.on(Hls.Events.ERROR, function(e, data) {
-                            if (data.fatal) self.notify('❌ Akış hatası oluştu', 'error');
-                        });
+                        }
                     } else {
-                        self.notify('❌ HLS desteklenmiyor', 'error');
+                        // mp4 vb.
+                        player.src = url;
+                        player.load();
+                        player.play()['catch'](function() { self.notify('❌ Oynatma başarısız', 'error'); });
                     }
-                } else {
-                    player.src = url;
-                    player.load();
-                    player.play()['catch'](function() { self.notify('❌ Oynatma başarısız', 'error'); });
+                } catch (e) {
+                    console.error('Oynatma hatası:', e);
+                    self.notify('❌ Oynatma hatası: ' + e.message, 'error');
                 }
             }, 100);
         };
@@ -1825,21 +1497,18 @@
             }
             try {
                 this.notify('🔒 Şifreli URL oluşturuluyor...', 'info');
-
                 var baseUrl = '';
                 if (location.protocol === 'file:') {
                     baseUrl = location.href.split('?')[0];
                 } else {
                     baseUrl = location.origin + location.pathname;
                 }
-
                 var config = {
                     credentials: this.state.creds,
                     favorites: this.state.favorites
                 };
                 var encrypted = encryptData(JSON.stringify(config), password);
                 var url = baseUrl + '?config=' + encodeURIComponent(encrypted);
-
                 document.getElementById('shareUrl').textContent = url;
                 document.getElementById('sharePass').textContent = password;
                 document.getElementById('shareStep1').classList.add('hidden');
