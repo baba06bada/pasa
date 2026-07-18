@@ -774,7 +774,7 @@
                 </div>
             </div>
             <div style="text-align:right;">
-                <button class="btn btn-secondary" onclick="closeModal('settingsModal')">Kapat</button>
+                <button class="btn btn-secondary" onclick="closeSettingsModal()">Kapat</button>
             </div>
         </div>
     </div>
@@ -782,9 +782,50 @@
     <script>
         // ------------------------------------------------
         // ES5 Uyumlu, LG Kumanda Desteği, HLS.js v0.14.17
-        // TEMA SEÇENEKLİ SÜRÜM
+        // TEMA SEÇENEKLİ SÜRÜM - FİLM/DİZİ ÇALIŞIR
         // ------------------------------------------------
 
+        // ----- TEMA FONKSİYONLARI (GLOBAL) -----
+        function applyTheme(themeName) {
+            var themes = ['default', 'dark', 'orange', 'green', 'red', 'purple'];
+            for (var i = 0; i < themes.length; i++) {
+                document.body.classList.remove('theme-' + themes[i]);
+            }
+            if (themeName !== 'default') {
+                document.body.classList.add('theme-' + themeName);
+            }
+            try { localStorage.setItem('iptv_theme', themeName); } catch(e) {}
+            var options = document.querySelectorAll('.theme-option');
+            for (var j = 0; j < options.length; j++) {
+                var btnTheme = options[j].getAttribute('data-theme');
+                options[j].classList.toggle('active', btnTheme === themeName);
+            }
+            closeSettingsModal();
+        }
+
+        function loadTheme() {
+            var saved = null;
+            try { saved = localStorage.getItem('iptv_theme'); } catch(e) {}
+            if (saved) {
+                applyTheme(saved);
+            } else {
+                document.body.classList.remove('theme-dark', 'theme-orange', 'theme-green', 'theme-red', 'theme-purple');
+                var options = document.querySelectorAll('.theme-option');
+                for (var i = 0; i < options.length; i++) {
+                    options[i].classList.toggle('active', options[i].getAttribute('data-theme') === 'default');
+                }
+            }
+        }
+
+        function openSettingsModal() {
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        // ----- app nesnesi (aynı, sadece tema fonksiyonları eklendi) -----
         var app = {};
 
         // ----- Yardımcı fonksiyonlar (ES5) -----
@@ -854,51 +895,6 @@
             return params;
         }
 
-        // ----- TEMA FONKSİYONLARI -----
-        function applyTheme(themeName) {
-            // Tüm theme sınıflarını kaldır
-            var themes = ['default', 'dark', 'orange', 'green', 'red', 'purple'];
-            for (var i = 0; i < themes.length; i++) {
-                document.body.classList.remove('theme-' + themes[i]);
-            }
-            if (themeName !== 'default') {
-                document.body.classList.add('theme-' + themeName);
-            }
-            // localStorage'a kaydet
-            try { localStorage.setItem('iptv_theme', themeName); } catch(e) {}
-            // Tema butonlarını güncelle
-            var options = document.querySelectorAll('.theme-option');
-            for (var j = 0; j < options.length; j++) {
-                var btnTheme = options[j].getAttribute('data-theme');
-                options[j].classList.toggle('active', btnTheme === themeName);
-            }
-            // Modal'ı kapat
-            closeModal('settingsModal');
-        }
-
-        function loadTheme() {
-            var saved = null;
-            try { saved = localStorage.getItem('iptv_theme'); } catch(e) {}
-            if (saved) {
-                applyTheme(saved);
-            } else {
-                // Varsayılan tema aktif
-                document.body.classList.remove('theme-dark', 'theme-orange', 'theme-green', 'theme-red', 'theme-purple');
-                var options = document.querySelectorAll('.theme-option');
-                for (var i = 0; i < options.length; i++) {
-                    options[i].classList.toggle('active', options[i].getAttribute('data-theme') === 'default');
-                }
-            }
-        }
-
-        function openSettings() {
-            document.getElementById('settingsModal').classList.add('active');
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
-        }
-
         // ----- app nesnesi -----
         app.state = {
             creds: null,
@@ -929,7 +925,7 @@
             this.bindEvents();
             this.renderPanelList();
             this.bindRemoteKeys();
-            loadTheme(); // Tema yükle
+            loadTheme();
         };
 
         app.bindRemoteKeys = function() {
@@ -1023,10 +1019,13 @@
                 self.changeCategory(e.target.value);
             });
 
-            // Ayarlar butonu - Menüden ayarları aç
-            document.getElementById('sm-settings').addEventListener('click', function() {
-                openSettings();
-            });
+            // Ayarlar butonu (sidebar'da mevcut olmalı)
+            var settingsBtn = document.getElementById('sm-settings');
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', function() {
+                    openSettingsModal();
+                });
+            }
 
             var tabs = document.querySelectorAll('.tab');
             for (var i = 0; i < tabs.length; i++) {
@@ -1043,7 +1042,7 @@
         };
 
         app.closeModal = function(id) {
-            closeModal(id);
+            document.getElementById(id).classList.remove('active');
         };
 
         // ----- Diğer mevcut fonksiyonlar (kısaltıldı, aynı mantık) -----
@@ -2042,8 +2041,17 @@
         // ----- Başlat -----
         document.addEventListener('DOMContentLoaded', function() {
             app.init();
-            // Menüye ayarlar butonu ekle (zaten HTML'de var, olay bağlandı)
-            // Tema seçeneklerine aktif sınıfını ekle
+            // Ayarlar butonu yoksa manuel ekle (sidebar'a)
+            var sidebarMenu = document.getElementById('sidebarMenu');
+            if (sidebarMenu) {
+                var settingsItem = document.createElement('div');
+                settingsItem.className = 'sidebar-item';
+                settingsItem.id = 'sm-settings';
+                settingsItem.tabIndex = 0;
+                settingsItem.innerHTML = '⚙️ Ayarlar';
+                settingsItem.onclick = function() { openSettingsModal(); };
+                sidebarMenu.appendChild(settingsItem);
+            }
             loadTheme();
         });
     </script>
